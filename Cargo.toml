@@ -6,5 +6,6 @@ edition = "2021"
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres", "chrono"] }
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 warp = "0.3"
