@@ -1,3 +1,5 @@
+mod models;
+
 #[tokio::main]
 async fn main() {
     let port: u16 = std::env::var("FUNCTIONS_CUSTOMHANDLER_PORT")
