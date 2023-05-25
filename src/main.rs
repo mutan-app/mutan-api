@@ -1,17 +1,19 @@
+mod filters;
+mod handlers;
 mod models;
 
 #[tokio::main]
 async fn main() {
-    let port: u16 = std::env::var("FUNCTIONS_CUSTOMHANDLER_PORT")
+    let port = std::env::var("FUNCTIONS_CUSTOMHANDLER_PORT")
         .ok()
-        .and_then(|text| text.parse().ok())
+        .and_then(|text| text.parse::<u16>().ok())
         .unwrap_or(3000);
 
     let addr = std::net::SocketAddrV4::new(std::net::Ipv4Addr::UNSPECIFIED, port);
 
-    use warp::Filter;
-    let version = warp::path!("version")
-        .map(|| format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")));
+    let url = std::env::var("DATABASE_URL").unwrap();
+    let db = sqlx::PgPool::connect(&url).await.unwrap();
+    let db = std::sync::Arc::new(tokio::sync::Mutex::new(db));
 
-    warp::serve(version).run(addr).await;
+    warp::serve(filters::root(db)).run(addr).await;
 }

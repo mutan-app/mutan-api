@@ -1,6 +1,8 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
+pub type Db = std::sync::Arc<tokio::sync::Mutex<sqlx::PgPool>>;
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: i64,
@@ -54,4 +56,28 @@ pub struct Training {
     pub description: Option<String>,
     pub default_weight: f32,
     pub default_count: i32,
+}
+
+pub mod extract {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct GetUser {
+        pub token: String,
+    }
+}
+
+pub mod reply {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct Meta {
+        pub name: String,
+        pub version: String,
+    }
+
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct GetUser {
+        pub token: String,
+    }
 }
