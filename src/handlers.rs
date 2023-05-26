@@ -1,4 +1,6 @@
 use crate::models;
+use base64::Engine;
+use rand::Rng;
 use std::convert::Infallible;
 
 pub async fn get_meta() -> Result<impl warp::Reply, Infallible> {
@@ -17,7 +19,7 @@ pub async fn get_user(
 
     let user = sqlx::query_as!(
         models::User,
-        "select * from users where token = $1",
+        "SELECT * FROM users WHERE token = $1",
         json.token
     )
     .fetch_one(&*db)
@@ -27,4 +29,35 @@ pub async fn get_user(
         .map(|user| models::reply::GetUser { token: user.token })
         .ok();
     Ok(warp::reply::json(&reply))
+}
+
+pub async fn create_user(db: models::Db) -> Result<impl warp::Reply, Infallible> {
+    let db = db.lock().await;
+
+    let mut bytes = [0u8; 64];
+    rand::thread_rng().fill(&mut bytes);
+    let token = base64::engine::general_purpose::STANDARD.encode(bytes);
+
+    sqlx::query!("INSERT INTO users (token) VALUES ($1)", token)
+        .execute(&*db)
+        .await
+        .unwrap();
+
+    let reply = models::reply::CreateUser { token };
+
+    Ok(warp::reply::json(&reply))
+}
+
+pub async fn delete_user(
+    json: models::extract::DeleteUser,
+    db: models::Db,
+) -> Result<impl warp::Reply, Infallible> {
+    let db = db.lock().await;
+
+    sqlx::query!("DELETE FROM users WHERE token = $1", json.token)
+        .execute(&*db)
+        .await
+        .unwrap();
+
+    Ok(warp::http::StatusCode::OK)
 }

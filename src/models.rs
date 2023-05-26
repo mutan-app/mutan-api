@@ -65,6 +65,11 @@ pub mod extract {
     pub struct GetUser {
         pub token: String,
     }
+
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct DeleteUser {
+        pub token: String,
+    }
 }
 
 pub mod reply {
@@ -78,6 +83,11 @@ pub mod reply {
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct GetUser {
+        pub token: String,
+    }
+
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct CreateUser {
         pub token: String,
     }
 }

@@ -5,7 +5,10 @@ use warp::Filter;
 pub fn root(
     db: models::Db,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
-    get_meta().or(get_user(db))
+    get_meta()
+        .or(get_user(db.clone()))
+        .or(create_user(db.clone())
+        .or(delete_user(db.clone())))
 }
 
 pub fn get_meta() -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
@@ -22,6 +25,25 @@ pub fn get_user(
         .and(json_body())
         .and(with_db(db))
         .and_then(handlers::get_user)
+}
+
+pub fn create_user(
+    db: models::Db,
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+    warp::path!("create_user")
+        .and(warp::get())
+        .and(with_db(db))
+        .and_then(handlers::create_user)
+}
+
+pub fn delete_user(
+    db: models::Db,
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+    warp::path!("delete_user")
+        .and(warp::post())
+        .and(json_body())
+        .and(with_db(db))
+        .and_then(handlers::delete_user)
 }
 
 fn with_db(db: models::Db) -> impl Filter<Extract = (models::Db,), Error = Infallible> + Clone {
