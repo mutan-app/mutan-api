@@ -12,6 +12,11 @@ pub fn root(
         .or(get_task(db.clone()))
         .or(create_task(db.clone()))
         .or(delete_task(db.clone()))
+        .or(get_task_instances(db.clone()))
+        .or(get_task_instance(db.clone()))
+        .or(create_task_instance(db.clone()))
+        .or(proceed_task_instance(db.clone()))
+        .or(delete_task_instance(db.clone()))
         .or(get_trainings(db.clone()))
         .or(get_training(db))
 }
@@ -89,6 +94,56 @@ pub fn delete_task(
         .and(json_body())
         .and(with_db(db))
         .and_then(handlers::delete_task)
+}
+
+pub fn get_task_instances(
+    db: models::Db,
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+    warp::path!("get_task_instances")
+        .and(warp::post())
+        .and(json_body())
+        .and(with_db(db))
+        .and_then(handlers::get_task_instances)
+}
+
+pub fn get_task_instance(
+    db: models::Db,
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+    warp::path!("get_task_instance")
+        .and(warp::post())
+        .and(json_body())
+        .and(with_db(db))
+        .and_then(handlers::get_task_instance)
+}
+
+pub fn create_task_instance(
+    db: models::Db,
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+    warp::path!("create_task_instance")
+        .and(warp::post())
+        .and(json_body())
+        .and(with_db(db))
+        .and_then(handlers::create_task_instance)
+}
+
+pub fn proceed_task_instance(
+    db: models::Db,
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+    warp::path!("proceed_task_instance")
+        .and(warp::post())
+        .and(json_body())
+        .and(with_db(db))
+        .and_then(handlers::proceed_task_instance)
+}
+
+pub fn delete_task_instance(
+    db: models::Db,
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+    warp::path!("delete_task_instance")
+        .and(warp::post())
+        .and(json_body())
+        .and(with_db(db))
+        .and_then(handlers::delete_task_instance)
 }
 
 pub fn get_trainings(

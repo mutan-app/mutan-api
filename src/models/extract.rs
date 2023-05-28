@@ -43,6 +43,36 @@ pub struct DeleteTask {
     pub user_token: String,
     pub id: i64,
 }
+#[derive(Debug, Default, Clone, Deserialize)]
+pub struct GetTaskInstances {
+    pub user_token: String,
+}
+
+#[derive(Debug, Default, Clone, Deserialize)]
+pub struct GetTaskInstance {
+    pub user_token: String,
+    pub id: i64,
+}
+
+#[derive(Debug, Default, Clone, Deserialize)]
+pub struct CreateTaskInstance {
+    pub user_token: String,
+    pub task_id: i64,
+    pub progress_value: i32,
+}
+
+#[derive(Debug, Default, Clone, Deserialize)]
+pub struct ProceedTaskInstance {
+    pub user_token: String,
+    pub id: i64,
+    pub progress_value: i32,
+}
+
+#[derive(Debug, Default, Clone, Deserialize)]
+pub struct DeleteTaskInstance {
+    pub user_token: String,
+    pub id: i64,
+}
 
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct GetTrainings {

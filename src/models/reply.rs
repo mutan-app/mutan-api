@@ -49,3 +49,19 @@ pub struct Training {
     pub default_weight_value: f64,
     pub default_count_value: i32,
 }
+
+#[derive(Debug, Default, Clone, Serialize)]
+pub struct GetTaskInstances {
+    pub task_instances: Vec<TaskInstance>,
+}
+
+#[derive(Debug, Default, Clone, Serialize)]
+pub struct GetTaskInstance {
+    pub task_instance: TaskInstance,
+}
+
+#[derive(Debug, Default, Clone, Serialize)]
+pub struct TaskInstance {
+    pub task_id: i64,
+    pub progress_value: i32,
+}
