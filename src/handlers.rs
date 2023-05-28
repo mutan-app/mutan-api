@@ -61,20 +61,20 @@ pub async fn get_tasks(
         "SELECT * FROM tasks WHERE user_id = $1 OFFSET $2 LIMIT $3",
         user.id,
         json.offset,
-        json.count,
+        json.size,
     )
     .fetch_all(&*db)
     .await
     .map_err(|_| rejects::ErrorMessage::new("failed to get tasks"))?;
 
-    let tasks = tasks
+    let reply_tasks = tasks
         .into_iter()
         .map(|task| models::reply::Task {
             name: task.name,
             description: task.description,
         })
         .collect::<Vec<_>>();
-    let reply = models::reply::GetTasks { tasks };
+    let reply = models::reply::GetTasks { tasks: reply_tasks };
     Ok(warp::reply::json(&reply))
 }
 
@@ -121,14 +121,14 @@ pub async fn create_task(
     .await
     .map_err(|_| rejects::ErrorMessage::new("failed to create task"))?;
 
-    for (i, active_training) in json.active_trainings.into_iter().enumerate() {
+    for (i, training_instance) in json.training_instances.into_iter().enumerate() {
         sqlx::query!(
-            "INSERT INTO active_trainings (task_id, training_id, target_order, target_weight, target_count) VALUES ($1, $2, $3, $4, $5)",
+            "INSERT INTO training_instances (task_id, order_value, training_id, weight_value, count_value) VALUES ($1, $2, $3, $4, $5)",
             task.id,
-            active_training.training_id,
             i as i32,
-            active_training.weight,
-            active_training.count
+            training_instance.training_id,
+            training_instance.weight_value,
+            training_instance.count_vale
         )
         .execute(&*db)
         .await
@@ -168,7 +168,7 @@ pub async fn get_trainings(
         models::Training,
         "SELECT * FROM trainings OFFSET $1 LIMIT $2",
         json.offset,
-        json.count,
+        json.size,
     )
     .fetch_all(&*db)
     .await
@@ -179,8 +179,8 @@ pub async fn get_trainings(
         .map(|training| models::reply::Training {
             name: training.name,
             description: training.description,
-            default_weight: training.default_weight,
-            default_count: training.default_count,
+            default_weight_value: training.default_weight_value,
+            default_count_value: training.default_count_value,
         })
         .collect::<Vec<_>>();
     let reply = models::reply::GetTrainings { trainings };
@@ -204,8 +204,8 @@ pub async fn get_training(
     let training = models::reply::Training {
         name: training.name,
         description: training.description,
-        default_weight: training.default_weight,
-        default_count: training.default_count,
+        default_weight_value: training.default_weight_value,
+        default_count_value: training.default_count_value,
     };
     let reply = models::reply::GetTraining { training };
     Ok(warp::reply::json(&reply))

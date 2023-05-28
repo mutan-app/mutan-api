@@ -13,21 +13,6 @@ pub struct User {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct DoneTask {
-    pub id: i64,
-    pub task_id: i64,
-    pub at: NaiveDateTime,
-}
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct ActiveTask {
-    pub id: i64,
-    pub user_id: i64,
-    pub task_id: i64,
-    pub progress: i32,
-}
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Task {
     pub id: i64,
     pub user_id: i64,
@@ -36,22 +21,17 @@ pub struct Task {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct DoneTraining {
+pub struct TaskInstance {
     pub id: i64,
-    pub user_id: i64,
-    pub training_id: i64,
-    pub weight: f64,
-    pub count: i32,
-    pub at: NaiveDateTime,
+    pub task_id: i64,
+    pub progress_value: i32,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct ActiveTraining {
+pub struct TaskResult {
+    pub id: i64,
     pub task_id: i64,
-    pub training_id: i64,
-    pub order: i32,
-    pub weight: f64,
-    pub count: i32,
+    pub at: NaiveDateTime,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -59,6 +39,26 @@ pub struct Training {
     pub id: i64,
     pub name: String,
     pub description: Option<String>,
-    pub default_weight: f64,
-    pub default_count: i32,
+    pub default_weight_value: f64,
+    pub default_count_value: i32,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct TrainingInstance {
+    pub id: i64,
+    pub task_id: i64,
+    pub order_value: i32,
+    pub training_id: i64,
+    pub weight_value: f64,
+    pub count_value: i32,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct TrainingResult {
+    pub id: i64,
+    pub user_id: i64,
+    pub training_id: i64,
+    pub weight_value: f64,
+    pub count_value: i32,
+    pub at: NaiveDateTime,
 }

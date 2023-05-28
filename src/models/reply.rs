@@ -46,6 +46,6 @@ pub struct GetTraining {
 pub struct Training {
     pub name: String,
     pub description: Option<String>,
-    pub default_weight: f64,
-    pub default_count: i32,
+    pub default_weight_value: f64,
+    pub default_count_value: i32,
 }

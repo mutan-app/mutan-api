@@ -1,11 +1,11 @@
 -- Add up migration script here
-CREATE TABLE active_trainings (
+CREATE TABLE training_instances (
   id BIGSERIAL PRIMARY KEY NOT NULL,
 	task_id BIGSERIAL NOT NULL,
+	order_value INTEGER NOT NULL,
 	training_id BIGSERIAL NOT NULL,
-	target_order INTEGER NOT NULL,
-	target_weight FLOAT NOT NULL,
-	target_count INTEGER NOT NULL,
+	weight_value FLOAT NOT NULL,
+	count_value INTEGER NOT NULL,
 	FOREIGN KEY (task_id) REFERENCES tasks(id),
 	FOREIGN KEY (training_id) REFERENCES trainings(id)
 );

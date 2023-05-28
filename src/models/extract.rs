@@ -13,7 +13,7 @@ pub struct DeleteUser {
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct GetTasks {
     pub user_token: String,
-    pub count: i64,
+    pub size: i64,
     pub offset: i64,
 }
 
@@ -28,14 +28,14 @@ pub struct CreateTask {
     pub user_token: String,
     pub name: String,
     pub description: Option<String>,
-    pub active_trainings: Vec<ActiveTraining>,
+    pub training_instances: Vec<TrainingInstance>,
 }
 
 #[derive(Debug, Default, Clone, Deserialize)]
-pub struct ActiveTraining {
+pub struct TrainingInstance {
     pub training_id: i64,
-    pub weight: f64,
-    pub count: i32,
+    pub weight_value: f64,
+    pub count_vale: i32,
 }
 
 #[derive(Debug, Default, Clone, Deserialize)]
@@ -46,7 +46,7 @@ pub struct DeleteTask {
 
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct GetTrainings {
-    pub count: i64,
+    pub size: i64,
     pub offset: i64,
 }
 
