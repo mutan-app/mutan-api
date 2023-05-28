@@ -1,7 +1,4 @@
 mod filters;
-mod handlers;
-mod models;
-mod rejects;
 
 #[tokio::main]
 async fn main() {
@@ -16,5 +13,5 @@ async fn main() {
     let db = sqlx::PgPool::connect(&url).await.unwrap();
     let db = std::sync::Arc::new(tokio::sync::Mutex::new(db));
 
-    warp::serve(filters::root(db)).run(addr).await;
+    warp::serve(filters::filter(db)).run(addr).await;
 }
