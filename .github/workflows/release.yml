@@ -32,12 +32,12 @@ jobs:
     - name: Compile
       run: cargo build --release --target x86_64-unknown-linux-musl
     - name: Strip
-      run: strip ./target/x86_64-unknown-linux-musl/release/mutan-api
+      run: strip ./target/x86_64-unknown-linux-musl/release/mutan-backend
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
-        name: mutan-api
-        path: ./target/x86_64-unknown-linux-musl/release/mutan-api
+        name: mutan-backend
+        path: ./target/x86_64-unknown-linux-musl/release/mutan-backend
 
   release:
     name: Release
@@ -47,11 +47,11 @@ jobs:
     - name: Download
       uses: actions/download-artifact@v3
       with:
-        name: mutan-api
-        path: ./mutan-api
+        name: mutan-backend
+        path: ./mutan-backend
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: ./mutan-api/*
+        files: ./mutan-backend/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
