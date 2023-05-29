@@ -6,6 +6,6 @@ CREATE TABLE training_instances (
 	training_id BIGSERIAL NOT NULL,
 	weight_value FLOAT NOT NULL,
 	count_value INTEGER NOT NULL,
-	FOREIGN KEY (task_id) REFERENCES tasks(id),
-	FOREIGN KEY (training_id) REFERENCES trainings(id)
+	FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+	FOREIGN KEY (training_id) REFERENCES trainings(id) ON DELETE CASCADE
 );

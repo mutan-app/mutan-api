@@ -14,7 +14,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
 
     sqlx::query!(
         "UPDATE task_instances SET progress_value = $1 
-            WHERE id = $2 AND task_id = (SELECT id FROM tasks WHERE user_id = (SELECT id FROM users WHERE token = $3))",
+            WHERE id = $2 AND task_id IN (SELECT id FROM tasks WHERE user_id = (SELECT id FROM users WHERE token = $3))",
         extract.progress_value,
         extract.id,
         extract.user_token,

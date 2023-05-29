@@ -27,7 +27,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
 pub fn filter(
     db: util::Db,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
-    warp::path!("delete_user")
+    warp::path!("delete_task")
         .and(warp::post())
         .and(util::json_body())
         .and(util::with_db(db))

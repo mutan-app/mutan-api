@@ -13,7 +13,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
 
     sqlx::query!(
         "DELETE FROM task_instances
-            WHERE id = $1 AND task_id = (SELECT id FROM tasks WHERE user_id = (SELECT id FROM users WHERE token = $2))",
+            WHERE id = $1 AND task_id IN (SELECT id FROM tasks WHERE user_id = (SELECT id FROM users WHERE token = $2))",
         extract.id,
         extract.user_token,
     )

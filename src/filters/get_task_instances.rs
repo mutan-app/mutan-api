@@ -14,6 +14,7 @@ pub struct Reply {
     pub name: String,
     pub description: Option<String>,
     pub training_instances: Vec<TrainingInstance>,
+    pub progress_value: i32,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
@@ -30,9 +31,9 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
     let db = db.lock().await;
 
     let combinations = sqlx::query!(
-        "SELECT T1.id, T1.task_id, T2.name, T2.description FROM task_instances AS T1
+        "SELECT T1.id, T1.task_id, T2.name, T2.description, T1.progress_value FROM task_instances AS T1
             JOIN tasks AS T2 ON T1.task_id = T2.id
-            WHERE T1.task_id = (SELECT id FROM tasks WHERE user_id = (SELECT id FROM users WHERE token = $1))",
+            WHERE T1.task_id IN (SELECT id FROM tasks WHERE user_id = (SELECT id FROM users WHERE token = $1))",
         extract.user_token,
     )
     .fetch_all(&*db)
@@ -58,6 +59,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
             name: combination.name,
             description: combination.description,
             training_instances,
+            progress_value: combination.progress_value,
         };
         reply_all.push(reply);
     }
