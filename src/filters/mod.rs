@@ -10,6 +10,7 @@ mod get_task_instance;
 mod get_task_instances;
 mod get_tasks;
 mod get_training;
+mod get_training_results;
 mod get_trainings;
 mod get_user;
 mod proceed_task_instance;
@@ -33,5 +34,6 @@ pub fn filter(
         .or(proceed_task_instance::filter(db.clone()))
         .or(delete_task_instance::filter(db.clone()))
         .or(get_trainings::filter(db.clone()))
-        .or(get_training::filter(db))
+        .or(get_training::filter(db.clone()))
+        .or(get_training_results::filter(db))
 }

@@ -11,15 +11,36 @@ pub struct Extract {
 pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
     let db = db.lock().await;
 
+    let mut tx = db
+        .begin()
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to begin transaction"))?;
+
+    sqlx::query!(
+        "INSERT INTO training_results (user_id, training_id, weight_value, count_value, done_at)
+            SELECT (SELECT id FROM users WHERE token = $1), T2.training_id, T2.weight_value, T2.count_value, T1.done_at FROM tmp_training_results AS T1
+            JOIN training_instances AS T2 ON T1.training_instance_id = T2.id
+            WHERE T1.task_instance_id = $2",
+        extract.user_token,
+        extract.id,
+    )
+    .execute(&mut tx)
+    .await
+    .map_err(|_| util::ErrorMessage::new("failed to delete a task instance"))?;
+
     sqlx::query!(
         "DELETE FROM task_instances
             WHERE id = $1 AND task_id IN (SELECT id FROM tasks WHERE user_id = (SELECT id FROM users WHERE token = $2))",
         extract.id,
         extract.user_token,
     )
-    .execute(&*db)
+    .execute(&mut tx)
     .await
     .map_err(|_| util::ErrorMessage::new("failed to delete a task instance"))?;
+
+    tx.commit()
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to commit transaction"))?;
 
     Ok(warp::http::StatusCode::OK)
 }

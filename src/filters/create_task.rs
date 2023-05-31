@@ -20,6 +20,11 @@ pub struct TrainingInstane {
 pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
     let db = db.lock().await;
 
+    let mut tx = db
+        .begin()
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to begin transaction"))?;
+
     let task = sqlx::query!(
         "INSERT INTO tasks (name, description, user_id)
             VALUES ($1, $2, (SELECT id FROM users WHERE token = $3))
@@ -28,7 +33,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         extract.description,
         extract.user_token,
     )
-    .fetch_one(&*db)
+    .fetch_one(&mut tx)
     .await
     .map_err(|_| util::ErrorMessage::new("failed to create a task"))?;
 
@@ -42,12 +47,16 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
             training_instance.weight_value,
             training_instance.count_value
         )
-        .execute(&*db)
+        .execute(&mut tx)
         .await
         .map_err(|_| {
             util::ErrorMessage::new("failed to add a training instance")
         })?;
     }
+
+    tx.commit()
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to commit transaction"))?;
 
     Ok(warp::http::StatusCode::OK)
 }
