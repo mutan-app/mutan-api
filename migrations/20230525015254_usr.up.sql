@@ -1,5 +1,5 @@
 -- Add up migration script here
-CREATE TABLE users (
+CREATE TABLE usr (
   id BIGSERIAL PRIMARY KEY NOT NULL,
-  token VARCHAR(255) UNIQUE NOT NULL
+  token VARCHAR(256) UNIQUE NOT NULL
 );

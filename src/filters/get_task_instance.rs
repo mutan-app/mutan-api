@@ -4,7 +4,7 @@ use warp::Filter;
 
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct Extract {
-    pub user_token: String,
+    pub token: String,
     pub id: i64,
 }
 
@@ -14,52 +14,57 @@ pub struct Reply {
     pub task_id: i64,
     pub name: String,
     pub description: Option<String>,
-    pub training_instances: Vec<TrainingInstance>,
-    pub progress_value: i32,
+    pub trains: Vec<Train>,
+    pub progress_val: i32,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
-pub struct TrainingInstance {
+pub struct Train {
     pub id: i64,
-    pub training_id: i64,
+    pub train_id: i64,
     pub name: String,
     pub description: Option<String>,
-    pub weight_value: f64,
-    pub count_value: i32,
+    pub weight_val: f64,
+    pub count_val: i32,
 }
 
 pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
     let db = db.lock().await;
 
-    let combination = sqlx::query!(
-        "SELECT T1.id, T1.task_id, T2.name, T2.description, T1.progress_value FROM task_instances AS T1
-            JOIN tasks AS T2 ON T1.task_id = T2.id
-            WHERE T1.id = $1 AND T1.task_id IN (SELECT id FROM tasks WHERE user_id = (SELECT id FROM users WHERE token = $2))",
+    let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
+        .fetch_one(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
+
+    let task = sqlx::query!(
+        "SELECT T1.id, T1.task_id, T2.name, T2.description, T1.progress_val FROM task_ins AS T1
+            JOIN task AS T2 ON T1.task_id = T2.id
+            WHERE T1.id = $1 AND T1.task_id IN (SELECT id FROM task WHERE usr_id = $2)",
         extract.id,
-        extract.user_token,
+        user.id,
     )
     .fetch_one(&*db)
     .await
     .map_err(|_| util::ErrorMessage::new("failed to get a task instance"))?;
 
-    let training_instances = sqlx::query_as!(
-        TrainingInstance,
-        "SELECT T1.id, T1.training_id, T2.name, T2.description, T1.weight_value, T1.count_value FROM training_instances AS T1
-            JOIN trainings AS T2 ON T1.training_id = T2.id
+    let trains = sqlx::query_as!(
+        Train,
+        "SELECT T1.id, T1.train_id, T2.name, T2.description, T1.weight_val, T1.count_val FROM train_ins AS T1
+            JOIN train AS T2 ON T1.train_id = T2.id
             WHERE T1.task_id = $1",
-        combination.task_id
+        task.task_id
     )
     .fetch_all(&*db)
     .await
     .map_err(|_| util::ErrorMessage::new("failed to get training instances"))?;
 
     let reply = Reply {
-        id: combination.id,
-        task_id: combination.task_id,
-        name: combination.name,
-        description: combination.description,
-        training_instances,
-        progress_value: combination.progress_value,
+        id: task.id,
+        task_id: task.task_id,
+        name: task.name,
+        description: task.description,
+        trains,
+        progress_val: task.progress_val,
     };
 
     Ok(warp::reply::json(&reply))

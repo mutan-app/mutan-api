@@ -10,7 +10,7 @@ pub struct Extract {
 pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
     let db = db.lock().await;
 
-    sqlx::query!("DELETE FROM users WHERE token = $1", extract.token)
+    sqlx::query!("DELETE FROM usr WHERE token = $1", extract.token)
         .execute(&*db)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to delete a user"))?;
