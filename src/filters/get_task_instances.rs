@@ -27,7 +27,7 @@ pub struct Train {
     pub times: i32,
 }
 
-pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp::Rejection> {
     let db = db.lock().await;
 
     let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
@@ -69,7 +69,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         reply_all.push(reply);
     }
 
-    Ok(warp::reply::json(&reply_all))
+    Ok(reply_all)
 }
 
 pub fn filter(
@@ -80,4 +80,5 @@ pub fn filter(
         .and(util::json_body())
         .and(util::with_db(db))
         .and_then(handler)
+        .map(|reply| warp::reply::json(&reply))
 }

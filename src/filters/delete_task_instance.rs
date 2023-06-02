@@ -8,7 +8,7 @@ pub struct Extract {
     pub id: i64,
 }
 
-pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn handler(extract: Extract, db: util::Db) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
     let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
@@ -16,7 +16,15 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
-    let task = sqlx::query!("SELECT usr_id FROM task WHERE id = $1", extract.id)
+    let task_ins = sqlx::query!(
+        "SELECT task_id, progress FROM task_ins WHERE id = $1",
+        extract.id
+    )
+    .fetch_one(&*db)
+    .await
+    .map_err(|_| util::ErrorMessage::new("failed to get a task instance"))?;
+
+    let task = sqlx::query!("SELECT usr_id FROM task WHERE id = $1", task_ins.task_id)
         .fetch_one(&*db)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
@@ -24,11 +32,6 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
     if task.usr_id != user.id {
         return Err(util::ErrorMessage::new("failed to get a task").into());
     }
-
-    let task_ins = sqlx::query!("SELECT progress FROM task_ins WHERE id = $1", extract.id)
-        .fetch_one(&*db)
-        .await
-        .map_err(|_| util::ErrorMessage::new("failed to get a task instance"))?;
 
     let mut tx = db
         .begin()
@@ -68,7 +71,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .await
         .map_err(|_| util::ErrorMessage::new("failed to commit transaction"))?;
 
-    Ok(warp::http::StatusCode::OK)
+    Ok(())
 }
 
 pub fn filter(
@@ -79,4 +82,5 @@ pub fn filter(
         .and(util::json_body())
         .and(util::with_db(db))
         .and_then(handler)
+        .map(|_| warp::http::StatusCode::OK)
 }
