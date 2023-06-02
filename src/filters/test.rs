@@ -7,7 +7,7 @@ async fn connect_db() -> std::sync::Arc<tokio::sync::Mutex<sqlx::PgPool>> {
 }
 
 #[tokio::test]
-async fn create_get_delete_user() {
+async fn crud_user() {
     let db = connect_db().await;
 
     let new_user = create_user::handler(db.clone()).await.unwrap();
@@ -65,7 +65,7 @@ async fn get_training() {
 }
 
 #[tokio::test]
-async fn create_get_delete_task() {
+async fn crud_task() {
     let db = connect_db().await;
 
     let user = create_user::handler(db.clone()).await.unwrap();
@@ -75,7 +75,18 @@ async fn create_get_delete_task() {
             token: user.token.clone(),
             name: "New Task".into(),
             description: None,
-            trains: vec![],
+            trains: vec![
+                create_task::TrainingInstane {
+                    train_id: 1,
+                    weight: 30.0,
+                    times: 5,
+                },
+                create_task::TrainingInstane {
+                    train_id: 2,
+                    weight: 60.0,
+                    times: 10,
+                },
+            ],
         },
         db.clone(),
     )
@@ -120,7 +131,7 @@ async fn create_get_delete_task() {
 }
 
 #[tokio::test]
-async fn create_get_delete_task_instance() {
+async fn crud_task_instance() {
     let db = connect_db().await;
 
     let user = create_user::handler(db.clone()).await.unwrap();
@@ -130,7 +141,18 @@ async fn create_get_delete_task_instance() {
             token: user.token.clone(),
             name: "New Task".into(),
             description: None,
-            trains: vec![],
+            trains: vec![
+                create_task::TrainingInstane {
+                    train_id: 1,
+                    weight: 30.0,
+                    times: 5,
+                },
+                create_task::TrainingInstane {
+                    train_id: 2,
+                    weight: 60.0,
+                    times: 10,
+                },
+            ],
         },
         db.clone(),
     )
@@ -147,6 +169,17 @@ async fn create_get_delete_task_instance() {
     .await
     .unwrap();
 
+    proceed_task_instance::handler(
+        proceed_task_instance::Extract {
+            token: user.token.clone(),
+            id: task_instance.id,
+            progress: 2,
+        },
+        db.clone(),
+    )
+    .await
+    .unwrap();
+
     delete_task_instance::handler(
         delete_task_instance::Extract {
             token: user.token.clone(),
@@ -156,6 +189,29 @@ async fn create_get_delete_task_instance() {
     )
     .await
     .unwrap();
+
+    let training_results = get_training_results::handler(
+        get_training_results::Extract {
+            token: user.token.clone(),
+            offset: 0,
+            size: 20,
+        },
+        db.clone(),
+    )
+    .await
+    .unwrap();
+
+    for training_result in training_results {
+        if training_result.id == 1 {
+            assert_eq!(training_result.weight, 30.0);
+            assert_eq!(training_result.times, 5);
+        } else if training_result.id == 2 {
+            assert_eq!(training_result.weight, 60.0);
+            assert_eq!(training_result.times, 10);
+        } else {
+            unreachable!();
+        }
+    }
 
     delete_task::handler(
         delete_task::Extract {
