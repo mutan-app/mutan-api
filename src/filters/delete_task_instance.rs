@@ -31,14 +31,25 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .await
         .map_err(|_| util::ErrorMessage::new("failed to begin transaction"))?;
 
+    let date_time = chrono::Utc::now().naive_utc();
+
     sqlx::query!(
         "INSERT INTO train_res (usr_id, train_id, weight, times, done_at)
             SELECT $1, train_id, weight, times, $2 FROM train_ins
             WHERE task_id = $3 AND idx < $4",
         user.id,
-        chrono::Utc::now().naive_utc(),
-        task_ins.task_id,
+        date_time,
+        extract.id,
         task_ins.progress,
+    )
+    .execute(&mut tx)
+    .await
+    .map_err(|_| util::ErrorMessage::new("failed to delete a task instance"))?;
+
+    sqlx::query!(
+        "INSERT INTO task_res (task_id, done_at) VALUES ($1, $2)",
+        extract.id,
+        date_time,
     )
     .execute(&mut tx)
     .await

@@ -26,7 +26,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
     .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
 
     sqlx::query!(
-        "INSERT INTO task_ins (task_id, progress) VALUES ($1, 0)",
+        "INSERT INTO task_ins (task_id) VALUES ($1)",
         extract.task_id,
     )
     .execute(&*db)
