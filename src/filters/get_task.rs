@@ -32,16 +32,19 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
     let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
-        .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
+        .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
     let task = sqlx::query!(
-        "SELECT id, name, description FROM task WHERE id = $1 AND usr_id = $2",
+        "SELECT id, name, description, usr_id FROM task WHERE id = $1",
         extract.id,
-        user.id,
     )
     .fetch_one(&*db)
     .await
     .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
+
+    if task.id != user.id {
+        return Err(util::ErrorMessage::new("failed to get a task").into());
+    }
 
     let trains = sqlx::query_as!(
         Train,

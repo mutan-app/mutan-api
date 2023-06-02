@@ -14,17 +14,21 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
     let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
+        .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
+
+    let task = sqlx::query!("SELECT usr_id FROM task WHERE id = $1", extract.id)
+        .fetch_one(&*db)
+        .await
         .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
 
-    let task_ins = sqlx::query!(
-        "SELECT task_id, progress FROM task_ins
-            WHERE id = $1 AND task_id IN (SELECT id FROM task WHERE usr_id = $2)",
-        extract.id,
-        user.id,
-    )
-    .fetch_one(&*db)
-    .await
-    .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
+    if task.usr_id != user.id {
+        return Err(util::ErrorMessage::new("failed to get a task").into());
+    }
+
+    let task_ins = sqlx::query!("SELECT progress FROM task_ins WHERE id = $1", extract.id)
+        .fetch_one(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get a task instance"))?;
 
     let mut tx = db
         .begin()
@@ -55,14 +59,10 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
     .await
     .map_err(|_| util::ErrorMessage::new("failed to delete a task instance"))?;
 
-    sqlx::query!(
-        "DELETE FROM task_ins WHERE id = $1 AND task_id IN (SELECT id FROM task WHERE usr_id = $2)",
-        extract.id,
-        user.id,
-    )
-    .execute(&mut tx)
-    .await
-    .map_err(|_| util::ErrorMessage::new("failed to delete a task instance"))?;
+    sqlx::query!("DELETE FROM task_ins WHERE id = $1", extract.id)
+        .execute(&mut tx)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to delete a task instance"))?;
 
     tx.commit()
         .await
