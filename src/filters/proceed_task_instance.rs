@@ -6,7 +6,7 @@ use warp::Filter;
 pub struct Extract {
     pub token: String,
     pub id: i64,
-    pub progress_val: i32,
+    pub progress: i32,
 }
 
 pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
@@ -18,9 +18,9 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
 
     sqlx::query!(
-        "UPDATE task_ins SET progress_val = $1 
+        "UPDATE task_ins SET progress = $1 
             WHERE id = $2 AND task_id IN (SELECT id FROM task WHERE usr_id = $3)",
-        extract.progress_val,
+        extract.progress,
         extract.id,
         user.id,
     )

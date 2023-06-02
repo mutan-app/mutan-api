@@ -13,8 +13,8 @@ pub struct Extract {
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct TrainingInstane {
     pub train_id: i64,
-    pub weight_val: f64,
-    pub count_val: i32,
+    pub weight: f64,
+    pub times: i32,
 }
 
 pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
@@ -40,14 +40,14 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
     .await
     .map_err(|_| util::ErrorMessage::new("failed to create a task"))?;
 
-    for (i, training_instance) in extract.trains.into_iter().enumerate() {
+    for (idx, training_instance) in extract.trains.into_iter().enumerate() {
         sqlx::query!(
-            "INSERT INTO train_ins (task_id, order_val, train_id, weight_val, count_val) VALUES ($1, $2, $3, $4, $5)",
+            "INSERT INTO train_ins (task_id, idx, train_id, weight, times) VALUES ($1, $2, $3, $4, $5)",
             task.id,
-            i as i32,
+            idx as i32,
             training_instance.train_id,
-            training_instance.weight_val,
-            training_instance.count_val
+            training_instance.weight,
+            training_instance.times
         )
         .execute(&mut tx)
         .await

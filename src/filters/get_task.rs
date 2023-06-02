@@ -22,8 +22,8 @@ pub struct Train {
     pub train_id: i64,
     pub name: String,
     pub description: Option<String>,
-    pub weight_val: f64,
-    pub count_val: i32,
+    pub weight: f64,
+    pub times: i32,
 }
 
 pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
@@ -45,7 +45,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
 
     let trains = sqlx::query_as!(
         Train,
-        "SELECT T1.id, T1.train_id, T2.name, T2.description, T1.weight_val, T1.count_val FROM train_ins AS T1
+        "SELECT T1.id, T1.train_id, T2.name, T2.description, T1.weight, T1.times FROM train_ins AS T1
             JOIN train AS T2 ON T1.train_id = T2.id
             WHERE T1.task_id = $1",
         task.id

@@ -13,8 +13,8 @@ pub struct Reply {
     pub id: i64,
     pub name: String,
     pub description: Option<String>,
-    pub weight_val: f64,
-    pub count_val: i32,
+    pub weight: f64,
+    pub times: i32,
 }
 
 pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
@@ -22,7 +22,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
 
     let reply = sqlx::query_as!(
         Reply,
-        "SELECT id, name, description, weight_val, count_val FROM train OFFSET $1 LIMIT $2",
+        "SELECT id, name, description, weight, times FROM train OFFSET $1 LIMIT $2",
         extract.offset,
         extract.size,
     )

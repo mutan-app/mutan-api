@@ -17,7 +17,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
 
     let task_ins = sqlx::query!(
-        "SELECT task_id, progress_val FROM task_ins
+        "SELECT task_id, progress FROM task_ins
             WHERE id = $1 AND task_id IN (SELECT id FROM task WHERE usr_id = $2)",
         extract.id,
         user.id,
@@ -32,13 +32,13 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .map_err(|_| util::ErrorMessage::new("failed to begin transaction"))?;
 
     sqlx::query!(
-        "INSERT INTO train_res (usr_id, train_id, weight_val, count_val, done_at)
-            SELECT $1, train_id, weight_val, count_val, $2 FROM train_ins
-            WHERE task_id = $3 AND order_val < $4",
+        "INSERT INTO train_res (usr_id, train_id, weight, times, done_at)
+            SELECT $1, train_id, weight, times, $2 FROM train_ins
+            WHERE task_id = $3 AND idx < $4",
         user.id,
         chrono::Utc::now().naive_utc(),
         task_ins.task_id,
-        task_ins.progress_val,
+        task_ins.progress,
     )
     .execute(&mut tx)
     .await

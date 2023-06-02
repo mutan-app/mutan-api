@@ -14,7 +14,7 @@ pub struct Reply {
     pub name: String,
     pub description: Option<String>,
     pub trains: Vec<Train>,
-    pub progress_val: i32,
+    pub progress: i32,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
@@ -23,8 +23,8 @@ pub struct Train {
     pub train_id: i64,
     pub name: String,
     pub description: Option<String>,
-    pub weight_val: f64,
-    pub count_val: i32,
+    pub weight: f64,
+    pub times: i32,
 }
 
 pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
@@ -36,7 +36,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
 
     let tasks = sqlx::query!(
-        "SELECT T1.id, T1.task_id, T2.name, T2.description, T1.progress_val FROM task_ins AS T1
+        "SELECT T1.id, T1.task_id, T2.name, T2.description, T1.progress FROM task_ins AS T1
             JOIN task AS T2 ON T1.task_id = T2.id
             WHERE T1.task_id IN (SELECT id FROM task WHERE usr_id = $1)",
         user.id,
@@ -49,7 +49,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
     for task in tasks {
         let trains = sqlx::query_as!(
             Train,
-            "SELECT T1.id, T1.train_id, T2.name, T2.description, T1.weight_val, T1.count_val FROM train_ins AS T1
+            "SELECT T1.id, T1.train_id, T2.name, T2.description, T1.weight, T1.times FROM train_ins AS T1
                 JOIN train AS T2 ON T1.train_id = T2.id
                 WHERE T1.task_id = $1",
             task.task_id
@@ -64,7 +64,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
             name: task.name,
             description: task.description,
             trains,
-            progress_val: task.progress_val,
+            progress: task.progress,
         };
         reply_all.push(reply);
     }
