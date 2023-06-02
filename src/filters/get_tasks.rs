@@ -12,13 +12,13 @@ pub struct Reply {
     pub id: i64,
     pub name: String,
     pub description: Option<String>,
-    pub trains: Vec<Train>,
+    pub training_instances: Vec<TrainingInstance>,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
-pub struct Train {
+pub struct TrainingInstance {
     pub id: i64,
-    pub train_id: i64,
+    pub training_id: i64,
     pub name: String,
     pub description: Option<String>,
     pub weight: f64,
@@ -28,13 +28,13 @@ pub struct Train {
 pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp::Rejection> {
     let db = db.lock().await;
 
-    let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
+    let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
     let tasks = sqlx::query!(
-        "SELECT id, name, description FROM task WHERE usr_id = $1",
+        "SELECT id, name, description FROM tasks WHERE user_id = $1",
         user.id
     )
     .fetch_all(&*db)
@@ -43,10 +43,10 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp:
 
     let mut reply_all = vec![];
     for task in tasks {
-        let trains = sqlx::query_as!(
-            Train,
-            "SELECT T1.id, T1.train_id, T2.name, T2.description, T1.weight, T1.times FROM train_ins AS T1
-                JOIN train AS T2 ON T1.train_id = T2.id
+        let training_instances = sqlx::query_as!(
+            TrainingInstance,
+            "SELECT T1.id, T1.training_id, T2.name, T2.description, T1.weight, T1.times FROM training_instances AS T1
+                JOIN trainings AS T2 ON T1.training_id = T2.id
                 WHERE T1.task_id = $1",
             task.id
         )
@@ -58,7 +58,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp:
             id: task.id,
             name: task.name,
             description: task.description,
-            trains,
+            training_instances,
         };
         reply_all.push(reply)
     }

@@ -1,8 +1,8 @@
 -- Add up migration script here
-CREATE TABLE task (
+CREATE TABLE tasks (
   id BIGSERIAL PRIMARY KEY NOT NULL,
-  usr_id BIGSERIAL NOT NULL,
+  user_id BIGSERIAL NOT NULL,
   name VARCHAR(32) NOT NULL,
   description VARCHAR(256),
-  FOREIGN KEY (usr_id) REFERENCES usr(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

@@ -11,13 +11,13 @@ pub struct Extract {
 pub async fn handler(extract: Extract, db: util::Db) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
-    let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
+    let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
     sqlx::query!(
-        "DELETE FROM task WHERE id = $1 AND usr_id = $2",
+        "DELETE FROM tasks WHERE id = $1 AND user_id = $2",
         extract.id,
         user.id,
     )

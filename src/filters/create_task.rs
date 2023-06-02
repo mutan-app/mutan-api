@@ -7,12 +7,12 @@ pub struct Extract {
     pub token: String,
     pub name: String,
     pub description: Option<String>,
-    pub trains: Vec<TrainingInstane>,
+    pub training_instances: Vec<TrainingInstane>,
 }
 
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct TrainingInstane {
-    pub train_id: i64,
+    pub training_id: i64,
     pub weight: f64,
     pub times: i32,
 }
@@ -25,7 +25,7 @@ pub struct Reply {
 pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
-    let user = sqlx::query!("SELECT (id) FROM usr WHERE token = $1", extract.token)
+    let user = sqlx::query!("SELECT (id) FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
@@ -36,7 +36,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Reje
         .map_err(|_| util::ErrorMessage::new("failed to begin transaction"))?;
 
     let task = sqlx::query!(
-        "INSERT INTO task (usr_id, name, description) VALUES ($1, $2, $3) RETURNING id",
+        "INSERT INTO tasks (user_id, name, description) VALUES ($1, $2, $3) RETURNING id",
         user.id,
         extract.name,
         extract.description,
@@ -45,12 +45,12 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Reje
     .await
     .map_err(|_| util::ErrorMessage::new("failed to create a task"))?;
 
-    for (idx, training_instance) in extract.trains.into_iter().enumerate() {
+    for (idx, training_instance) in extract.training_instances.into_iter().enumerate() {
         sqlx::query!(
-            "INSERT INTO train_ins (task_id, idx, train_id, weight, times) VALUES ($1, $2, $3, $4, $5)",
+            "INSERT INTO training_instances (task_id, stage, training_id, weight, times) VALUES ($1, $2, $3, $4, $5)",
             task.id,
             idx as i32,
-            training_instance.train_id,
+            training_instance.training_id,
             training_instance.weight,
             training_instance.times
         )

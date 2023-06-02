@@ -22,7 +22,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp:
 
     let reply = sqlx::query_as!(
         Reply,
-        "SELECT id, name, description, weight, times FROM train OFFSET $1 LIMIT $2",
+        "SELECT id, name, description, weight, times FROM trainings OFFSET $1 LIMIT $2",
         extract.offset,
         extract.size,
     )

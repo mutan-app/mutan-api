@@ -75,14 +75,14 @@ async fn crud_task() {
             token: user.token.clone(),
             name: "New Task".into(),
             description: None,
-            trains: vec![
+            training_instances: vec![
                 create_task::TrainingInstane {
-                    train_id: 1,
+                    training_id: 1,
                     weight: 30.0,
                     times: 5,
                 },
                 create_task::TrainingInstane {
-                    train_id: 2,
+                    training_id: 2,
                     weight: 60.0,
                     times: 10,
                 },
@@ -141,14 +141,14 @@ async fn crud_task_instance() {
             token: user.token.clone(),
             name: "New Task".into(),
             description: None,
-            trains: vec![
+            training_instances: vec![
                 create_task::TrainingInstane {
-                    train_id: 1,
+                    training_id: 1,
                     weight: 30.0,
                     times: 5,
                 },
                 create_task::TrainingInstane {
-                    train_id: 2,
+                    training_id: 2,
                     weight: 60.0,
                     times: 10,
                 },
@@ -159,7 +159,7 @@ async fn crud_task_instance() {
     .await
     .unwrap();
 
-    let task_instance = create_task_instance::handler(
+    create_task_instance::handler(
         create_task_instance::Extract {
             token: user.token.clone(),
             task_id: task.id,
@@ -172,7 +172,6 @@ async fn crud_task_instance() {
     proceed_task_instance::handler(
         proceed_task_instance::Extract {
             token: user.token.clone(),
-            id: task_instance.id,
             progress: 2,
         },
         db.clone(),
@@ -183,7 +182,6 @@ async fn crud_task_instance() {
     delete_task_instance::handler(
         delete_task_instance::Extract {
             token: user.token.clone(),
-            id: task_instance.id,
         },
         db.clone(),
     )
@@ -202,10 +200,10 @@ async fn crud_task_instance() {
     .unwrap();
 
     for training_result in training_results {
-        if training_result.id == 1 {
+        if training_result.training_id == 1 {
             assert_eq!(training_result.weight, 30.0);
             assert_eq!(training_result.times, 5);
-        } else if training_result.id == 2 {
+        } else if training_result.training_id == 2 {
             assert_eq!(training_result.weight, 60.0);
             assert_eq!(training_result.times, 10);
         } else {

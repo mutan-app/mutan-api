@@ -21,7 +21,7 @@ pub async fn handler(db: util::Db) -> Result<Reply, warp::Rejection> {
 
     let db = db.lock().await;
 
-    sqlx::query!("INSERT INTO usr (token) VALUES ($1)", token)
+    sqlx::query!("INSERT INTO users (token) VALUES ($1)", token)
         .execute(&*db)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to create a user"))?;

@@ -21,7 +21,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Reje
 
     let reply = sqlx::query_as!(
         Reply,
-        "SELECT id, name, description, weight, times FROM train WHERE id = $1",
+        "SELECT id, name, description, weight, times FROM trainings WHERE id = $1",
         extract.id,
     )
     .fetch_one(&*db)

@@ -7,7 +7,6 @@ mod delete_user;
 mod get_meta;
 mod get_task;
 mod get_task_instance;
-mod get_task_instances;
 mod get_tasks;
 mod get_training;
 mod get_training_results;
@@ -31,7 +30,6 @@ pub fn filter(
         .or(get_task::filter(db.clone()))
         .or(create_task::filter(db.clone()))
         .or(delete_task::filter(db.clone()))
-        .or(get_task_instances::filter(db.clone()))
         .or(get_task_instance::filter(db.clone()))
         .or(create_task_instance::filter(db.clone()))
         .or(proceed_task_instance::filter(db.clone()))

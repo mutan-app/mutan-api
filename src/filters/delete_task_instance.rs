@@ -5,33 +5,24 @@ use warp::Filter;
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct Extract {
     pub token: String,
-    pub id: i64,
 }
 
 pub async fn handler(extract: Extract, db: util::Db) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
-    let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
+    let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
-    let task_ins = sqlx::query!(
-        "SELECT task_id, progress FROM task_ins WHERE id = $1",
-        extract.id
+    let task_instance = sqlx::query!(
+        "SELECT id, task_id, progress FROM task_instances
+            WHERE task_id IN (SELECT id FROM tasks WHERE user_id = $1)",
+        user.id
     )
     .fetch_one(&*db)
     .await
     .map_err(|_| util::ErrorMessage::new("failed to get a task instance"))?;
-
-    let task = sqlx::query!("SELECT usr_id FROM task WHERE id = $1", task_ins.task_id)
-        .fetch_one(&*db)
-        .await
-        .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
-
-    if task.usr_id != user.id {
-        return Err(util::ErrorMessage::new("failed to get a task").into());
-    }
 
     let mut tx = db
         .begin()
@@ -41,28 +32,28 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<(), warp::Rejecti
     let date_time = chrono::Utc::now().naive_utc();
 
     sqlx::query!(
-        "INSERT INTO train_res (usr_id, train_id, weight, times, done_at)
-            SELECT $1, train_id, weight, times, $2 FROM train_ins
-            WHERE id = $3 AND idx < $4",
+        "INSERT INTO training_results (user_id, training_id, weight, times, done_at)
+            SELECT $1, training_id, weight, times, $2 FROM training_instances
+            WHERE id = $3 AND stage < $4",
         user.id,
         date_time,
-        extract.id,
-        task_ins.progress,
+        task_instance.id,
+        task_instance.progress,
     )
     .execute(&mut tx)
     .await
-    .map_err(|_| util::ErrorMessage::new("failed to create a training result"))?;
+    .map_err(|e| util::ErrorMessage::new(format!("failed to create a training result {}", e)))?;
 
     sqlx::query!(
-        "INSERT INTO task_res (task_id, done_at) VALUES ($1, $2)",
-        extract.id,
+        "INSERT INTO task_results (task_id, done_at) VALUES ($1, $2)",
+        task_instance.task_id,
         date_time,
     )
     .execute(&mut tx)
     .await
     .map_err(|_| util::ErrorMessage::new("failed to create a task result"))?;
 
-    sqlx::query!("DELETE FROM task_ins WHERE id = $1", extract.id)
+    sqlx::query!("DELETE FROM task_instances WHERE id = $1", task_instance.id)
         .execute(&mut tx)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to delete a task instance"))?;

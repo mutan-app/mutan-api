@@ -12,7 +12,7 @@ pub struct Extract {
 #[derive(Debug, Default, Clone, Serialize)]
 pub struct Reply {
     pub id: i64,
-    pub train_id: i64,
+    pub training_id: i64,
     pub name: String,
     pub weight: f64,
     pub times: i32,
@@ -22,16 +22,16 @@ pub struct Reply {
 pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp::Rejection> {
     let db = db.lock().await;
 
-    let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
+    let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
     let reply = sqlx::query_as!(
         Reply,
-        "SELECT T1.id, T1.train_id, T2.name, T1.weight, T1.times, T1.done_at FROM train_res AS T1
-            JOIN train AS T2 ON T1.train_id = T2.id
-            WHERE T1.usr_id = $1
+        "SELECT T1.id, T1.training_id, T2.name, T1.weight, T1.times, T1.done_at FROM training_results AS T1
+            JOIN trainings AS T2 ON T1.training_id = T2.id
+            WHERE T1.user_id = $1
             OFFSET $2 LIMIT $3",
         user.id,
         extract.offset,

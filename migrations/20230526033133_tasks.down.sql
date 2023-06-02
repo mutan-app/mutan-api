@@ -1,2 +1,2 @@
 -- Add down migration script here
-DROP TABLE train_ins;
+DROP TABLE tasks;

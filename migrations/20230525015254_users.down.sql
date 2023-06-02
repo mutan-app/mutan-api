@@ -1,2 +1,2 @@
 -- Add down migration script here
-DROP TABLE task_res;
+DROP TABLE users;

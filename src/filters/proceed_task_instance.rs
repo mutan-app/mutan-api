@@ -5,28 +5,26 @@ use warp::Filter;
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct Extract {
     pub token: String,
-    pub id: i64,
     pub progress: i32,
 }
 
 pub async fn handler(extract: Extract, db: util::Db) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
-    let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
+    let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
     sqlx::query!(
-        "UPDATE task_ins SET progress = $1 
-            WHERE id = $2 AND task_id IN (SELECT id FROM task WHERE usr_id = $3)",
+        "UPDATE task_instances SET progress = $1
+            WHERE task_id IN (SELECT id FROM tasks WHERE user_id = $2)",
         extract.progress,
-        extract.id,
         user.id,
     )
     .execute(&*db)
     .await
-    .map_err(|_| util::ErrorMessage::new("failed to update a task instance"))?;
+    .map_err(|_| util::ErrorMessage::new("failed to proceed a task instance"))?;
 
     Ok(())
 }

@@ -1,2 +1,2 @@
 -- Add down migration script here
-DROP TABLE train;
+DROP TABLE task_results;

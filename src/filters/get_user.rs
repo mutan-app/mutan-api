@@ -17,7 +17,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Reje
 
     let reply = sqlx::query_as!(
         Reply,
-        "SELECT token FROM usr WHERE token = $1",
+        "SELECT token FROM users WHERE token = $1",
         extract.token
     )
     .fetch_one(&*db)
