@@ -16,7 +16,7 @@ pub struct Reply {
     pub times: i32,
 }
 
-pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
     let reply = sqlx::query_as!(
@@ -28,7 +28,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
     .await
     .map_err(|_| util::ErrorMessage::new("failed to get a training"))?;
 
-    Ok(warp::reply::json(&reply))
+    Ok(reply)
 }
 
 pub fn filter(
@@ -39,4 +39,5 @@ pub fn filter(
         .and(util::json_body())
         .and(util::with_db(db))
         .and_then(handler)
+        .map(|reply| warp::reply::json(&reply))
 }

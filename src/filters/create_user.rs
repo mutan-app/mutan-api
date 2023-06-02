@@ -14,7 +14,7 @@ pub struct Reply {
     pub token: String,
 }
 
-pub async fn handler(db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn handler(db: util::Db) -> Result<Reply, warp::Rejection> {
     let mut bytes = [0u8; 64];
     rand::thread_rng().fill(&mut bytes);
     let token = base64::engine::general_purpose::STANDARD.encode(bytes);
@@ -28,7 +28,7 @@ pub async fn handler(db: util::Db) -> Result<impl warp::Reply, warp::Rejection> 
 
     let reply = Reply { token };
 
-    Ok(warp::reply::json(&reply))
+    Ok(reply)
 }
 
 pub fn filter(
@@ -38,4 +38,5 @@ pub fn filter(
         .and(warp::get())
         .and(util::with_db(db))
         .and_then(handler)
+        .map(|reply| warp::reply::json(&reply))
 }

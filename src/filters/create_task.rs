@@ -1,5 +1,5 @@
 use crate::filters::util;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use warp::Filter;
 
 #[derive(Debug, Default, Clone, Deserialize)]
@@ -17,7 +17,12 @@ pub struct TrainingInstane {
     pub times: i32,
 }
 
-pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
+#[derive(Debug, Default, Clone, Serialize)]
+pub struct Reply {
+    pub id: i64,
+}
+
+pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
     let user = sqlx::query!("SELECT (id) FROM usr WHERE token = $1", extract.token)
@@ -60,7 +65,9 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .await
         .map_err(|_| util::ErrorMessage::new("failed to commit transaction"))?;
 
-    Ok(warp::http::StatusCode::OK)
+    let reply = Reply { id: task.id };
+
+    Ok(reply)
 }
 
 pub fn filter(
@@ -71,4 +78,5 @@ pub fn filter(
         .and(util::json_body())
         .and(util::with_db(db))
         .and_then(handler)
+        .map(|reply| warp::reply::json(&reply))
 }

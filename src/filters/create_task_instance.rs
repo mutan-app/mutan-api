@@ -1,5 +1,5 @@
 use crate::filters::util;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use warp::Filter;
 
 #[derive(Debug, Default, Clone, Deserialize)]
@@ -8,7 +8,12 @@ pub struct Extract {
     pub task_id: i64,
 }
 
-pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
+#[derive(Debug, Default, Clone, Serialize)]
+pub struct Reply {
+    pub id: i64,
+}
+
+pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
     let user = sqlx::query!("SELECT id FROM usr WHERE token = $1", extract.token)
@@ -16,24 +21,28 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
-    sqlx::query!(
-        "SELECT FROM task WHERE id = $1 AND usr_id = $2",
+    let task = sqlx::query!("SELECT usr_id FROM task WHERE id = $1", extract.task_id)
+        .fetch_one(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
+
+    if task.usr_id != user.id {
+        return Err(util::ErrorMessage::new("failed to get a task").into());
+    }
+
+    let task_instance = sqlx::query!(
+        "INSERT INTO task_ins (task_id, progress) VALUES ($1, 0) RETURNING id",
         extract.task_id,
-        user.id
     )
     .fetch_one(&*db)
     .await
-    .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
-
-    sqlx::query!(
-        "INSERT INTO task_ins (task_id) VALUES ($1)",
-        extract.task_id,
-    )
-    .execute(&*db)
-    .await
     .map_err(|_| util::ErrorMessage::new("failed to create a task instance"))?;
 
-    Ok(warp::http::StatusCode::OK)
+    let reply = Reply {
+        id: task_instance.id,
+    };
+
+    Ok(reply)
 }
 
 pub fn filter(
@@ -44,4 +53,5 @@ pub fn filter(
         .and(util::json_body())
         .and(util::with_db(db))
         .and_then(handler)
+        .map(|reply| warp::reply::json(&reply))
 }

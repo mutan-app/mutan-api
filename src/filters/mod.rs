@@ -16,6 +16,9 @@ mod get_user;
 mod proceed_task_instance;
 mod util;
 
+#[cfg(test)]
+mod test;
+
 use warp::Filter;
 
 pub fn filter(

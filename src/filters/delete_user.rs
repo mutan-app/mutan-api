@@ -7,7 +7,7 @@ pub struct Extract {
     pub token: String,
 }
 
-pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn handler(extract: Extract, db: util::Db) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
     sqlx::query!("DELETE FROM usr WHERE token = $1", extract.token)
@@ -15,7 +15,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<impl warp::Reply,
         .await
         .map_err(|_| util::ErrorMessage::new("failed to delete a user"))?;
 
-    Ok(warp::http::StatusCode::OK)
+    Ok(())
 }
 
 pub fn filter(
@@ -26,4 +26,5 @@ pub fn filter(
         .and(util::json_body())
         .and(util::with_db(db))
         .and_then(handler)
+        .map(|_| warp::http::StatusCode::OK)
 }

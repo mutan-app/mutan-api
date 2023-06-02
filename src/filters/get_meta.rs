@@ -8,14 +8,18 @@ pub struct Reply {
     pub version: String,
 }
 
-pub async fn handler() -> Result<impl warp::Reply, Infallible> {
+pub async fn handler() -> Result<Reply, Infallible> {
     let name = env!("CARGO_PKG_NAME").to_string();
     let version = env!("CARGO_PKG_VERSION").to_string();
 
-    let meta = Reply { name, version };
-    Ok(warp::reply::json(&meta))
+    let reply = Reply { name, version };
+
+    Ok(reply)
 }
 
 pub fn filter() -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
-    warp::path!("get_meta").and(warp::get()).and_then(handler)
+    warp::path!("get_meta")
+        .and(warp::get())
+        .and_then(handler)
+        .map(|reply| warp::reply::json(&reply))
 }
