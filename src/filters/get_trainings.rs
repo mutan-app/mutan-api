@@ -5,7 +5,8 @@ use warp::Filter;
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct Extract {
     pub offset: i64,
-    pub size: i64,
+    pub limit: i64,
+    pub order_by: String,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
@@ -20,15 +21,45 @@ pub struct Reply {
 pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp::Rejection> {
     let db = db.lock().await;
 
-    let reply = sqlx::query_as!(
-        Reply,
-        "SELECT id, name, description, weight, times FROM trainings OFFSET $1 LIMIT $2",
-        extract.offset,
-        extract.size,
-    )
-    .fetch_all(&*db)
-    .await
-    .map_err(|_| util::ErrorMessage::new("failed to get trainings"))?;
+    let reply = match extract.order_by.as_str() {
+        "name" => sqlx::query_as!(
+            Reply,
+            "SELECT id, name, description, weight, times FROM trainings
+                ORDER BY name ASC
+                OFFSET $1 LIMIT $2",
+            extract.offset,
+            extract.limit,
+        )
+        .fetch_all(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get trainings")),
+
+        "times" => sqlx::query_as!(
+            Reply,
+            "SELECT id, name, description, weight, times FROM trainings
+                ORDER BY (SELECT COUNT(id) FROM training_results WHERE training_id = id) DESC
+                OFFSET $1 LIMIT $2",
+            extract.offset,
+            extract.limit,
+        )
+        .fetch_all(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get trainings")),
+
+        "recent" => sqlx::query_as!(
+            Reply,
+            "SELECT id, name, description, weight, times FROM trainings
+                ORDER BY (SELECT MAX(done_at) FROM training_results WHERE training_id = id) DESC
+                OFFSET $1 LIMIT $2",
+            extract.offset,
+            extract.limit,
+        )
+        .fetch_all(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get trainings")),
+
+        _ => Err(util::ErrorMessage::new("invalid order_by value")),
+    }?;
 
     Ok(reply)
 }

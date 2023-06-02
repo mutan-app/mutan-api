@@ -5,6 +5,15 @@ use warp::Filter;
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct Extract {
     pub token: String,
+    pub offset: i64,
+    pub limit: i64,
+    pub order_by: String,
+}
+
+struct Task {
+    id: i64,
+    name: String,
+    description: Option<String>,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
@@ -33,13 +42,48 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp:
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
-    let tasks = sqlx::query!(
-        "SELECT id, name, description FROM tasks WHERE user_id = $1",
-        user.id
-    )
-    .fetch_all(&*db)
-    .await
-    .map_err(|_| util::ErrorMessage::new("failed to get tasks"))?;
+    let tasks = match extract.order_by.as_str() {
+        "new" => sqlx::query_as!(
+            Task,
+            "SELECT id, name, description FROM tasks WHERE user_id = $1
+                ORDER BY id DESC
+                OFFSET $2 LIMIT $3",
+            user.id,
+            extract.offset,
+            extract.limit,
+        )
+        .fetch_all(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get tasks")),
+
+        "times" => sqlx::query_as!(
+            Task,
+            "SELECT id, name, description FROM tasks WHERE user_id = $1
+                ORDER BY (SELECT COUNT(id) FROM task_results WHERE task_id = id) DESC
+                OFFSET $2 LIMIT $3",
+            user.id,
+            extract.offset,
+            extract.limit,
+        )
+        .fetch_all(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get tasks")),
+
+        "recent" => sqlx::query_as!(
+            Task,
+            "SELECT id, name, description FROM tasks WHERE user_id = $1
+                ORDER BY (SELECT MAX(done_at) FROM task_results WHERE task_id = id) DESC
+                OFFSET $2 LIMIT $3",
+            user.id,
+            extract.offset,
+            extract.limit,
+        )
+        .fetch_all(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get tasks")),
+
+        _ => Err(util::ErrorMessage::new("invalid order_by value")),
+    }?;
 
     let mut reply_all = vec![];
     for task in tasks {
@@ -48,7 +92,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp:
             "SELECT T1.id, T1.training_id, T2.name, T2.description, T1.weight, T1.times FROM training_instances AS T1
                 JOIN trainings AS T2 ON T1.training_id = T2.id
                 WHERE T1.task_id = $1",
-            task.id
+            task.id,
         )
         .fetch_all(&*db)
         .await

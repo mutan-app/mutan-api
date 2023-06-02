@@ -44,7 +44,8 @@ async fn get_training() {
     let trainings = get_trainings::handler(
         get_trainings::Extract {
             offset: 0,
-            size: 20,
+            limit: 20,
+            order_by: "name".into(),
         },
         db.clone(),
     )
@@ -192,7 +193,8 @@ async fn crud_task_instance() {
         get_training_results::Extract {
             token: user.token.clone(),
             offset: 0,
-            size: 20,
+            limit: 20,
+            order_by: "new".into(),
         },
         db.clone(),
     )
@@ -236,7 +238,8 @@ async fn get_training_result() {
         get_training_results::Extract {
             token: user.token.clone(),
             offset: 0,
-            size: 20,
+            limit: 20,
+            order_by: "new".into(),
         },
         db.clone(),
     )

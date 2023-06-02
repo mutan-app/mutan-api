@@ -6,7 +6,8 @@ use warp::Filter;
 pub struct Extract {
     pub token: String,
     pub offset: i64,
-    pub size: i64,
+    pub limit: i64,
+    pub order_by: String,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
@@ -27,19 +28,24 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Vec<Reply>, warp:
         .await
         .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
 
-    let reply = sqlx::query_as!(
-        Reply,
-        "SELECT T1.id, T1.training_id, T2.name, T1.weight, T1.times, T1.done_at FROM training_results AS T1
-            JOIN trainings AS T2 ON T1.training_id = T2.id
-            WHERE T1.user_id = $1
-            OFFSET $2 LIMIT $3",
-        user.id,
-        extract.offset,
-        extract.size,
-    )
-    .fetch_all(&*db)
-    .await
-    .map_err(|_| util::ErrorMessage::new("failed to get training results"))?;
+    let reply = match extract.order_by.as_str() {
+        "new" => sqlx::query_as!(
+            Reply,
+            "SELECT T1.id, T1.training_id, T2.name, T1.weight, T1.times, T1.done_at FROM training_results AS T1
+                JOIN trainings AS T2 ON T1.training_id = T2.id
+                WHERE T1.user_id = $1
+                ORDER BY id DESC
+                OFFSET $2 LIMIT $3",
+            user.id,
+            extract.offset,
+            extract.limit,
+        )
+        .fetch_all(&*db)
+        .await
+        .map_err(|_| util::ErrorMessage::new("failed to get training results")),
+
+        _ => Err(util::ErrorMessage::new("invalid order_by value")),
+    }?;
 
     Ok(reply)
 }
