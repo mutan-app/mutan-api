@@ -1,8 +1,7 @@
-use crate::filters::util;
-use serde::{Deserialize, Serialize};
+use crate::util;
 use warp::Filter;
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct Extract {
     pub token: String,
     pub name: String,
@@ -10,30 +9,27 @@ pub struct Extract {
     pub training_instances: Vec<TrainingInstane>,
 }
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct TrainingInstane {
     pub training_id: i64,
     pub weight: f64,
     pub times: i32,
 }
 
-#[derive(Debug, Default, Clone, Serialize)]
+#[derive(Debug, Default, Clone, serde::Serialize)]
 pub struct Reply {
     pub id: i64,
 }
 
-pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Rejection> {
+pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
     let user = sqlx::query!("SELECT (id) FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
-        .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
+        .map_err(util::error)?;
 
-    let mut tx = db
-        .begin()
-        .await
-        .map_err(|_| util::ErrorMessage::new("failed to begin transaction"))?;
+    let mut tx = db.begin().await.map_err(util::error)?;
 
     let task = sqlx::query!(
         "INSERT INTO tasks (user_id, name, description) VALUES ($1, $2, $3) RETURNING id",
@@ -43,27 +39,23 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Reje
     )
     .fetch_one(&mut tx)
     .await
-    .map_err(|_| util::ErrorMessage::new("failed to create a task"))?;
+    .map_err(util::error)?;
 
-    for (idx, training_instance) in extract.training_instances.into_iter().enumerate() {
+    for (stage, training_instance) in extract.training_instances.into_iter().enumerate() {
         sqlx::query!(
             "INSERT INTO training_instances (task_id, stage, training_id, weight, times) VALUES ($1, $2, $3, $4, $5)",
             task.id,
-            idx as i32,
+            stage as i32,
             training_instance.training_id,
             training_instance.weight,
             training_instance.times
         )
         .execute(&mut tx)
         .await
-        .map_err(|_| {
-            util::ErrorMessage::new("failed to add a training instance")
-        })?;
+        .map_err(util::error)?;
     }
 
-    tx.commit()
-        .await
-        .map_err(|_| util::ErrorMessage::new("failed to commit transaction"))?;
+    tx.commit().await.map_err(util::error)?;
 
     let reply = Reply { id: task.id };
 
@@ -71,7 +63,7 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<Reply, warp::Reje
 }
 
 pub fn filter(
-    db: util::Db,
+    db: util::AppDb,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path!("create_task")
         .and(warp::post())

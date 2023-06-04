@@ -1,4 +1,5 @@
-mod filters;
+mod filter;
+mod util;
 
 #[tokio::main]
 async fn main() {
@@ -9,9 +10,7 @@ async fn main() {
 
     let addr = std::net::SocketAddrV4::new(std::net::Ipv4Addr::UNSPECIFIED, port);
 
-    let url = std::env::var("DATABASE_URL").unwrap();
-    let db = sqlx::PgPool::connect(&url).await.unwrap();
-    let db = std::sync::Arc::new(tokio::sync::Mutex::new(db));
+    let db = util::new_app_db().await.unwrap();
 
-    warp::serve(filters::filter(db)).run(addr).await;
+    warp::serve(filter::filter(db)).run(addr).await;
 }

@@ -1,9 +1,17 @@
 use std::convert::Infallible;
 use warp::Filter;
 
-pub type Db = std::sync::Arc<tokio::sync::Mutex<sqlx::PgPool>>;
+pub type AppDb = std::sync::Arc<tokio::sync::Mutex<sqlx::PgPool>>;
 
-pub fn with_db(db: Db) -> impl Filter<Extract = (Db,), Error = Infallible> + Clone {
+pub async fn new_app_db() -> Result<AppDb, warp::Rejection> {
+    let url = std::env::var("DATABASE_URL").map_err(|_| error("failed to get DATABASE_URL"))?;
+    let db = sqlx::PgPool::connect(&url)
+        .await
+        .map_err(|_| error("failed to connect db"))?;
+    Ok(std::sync::Arc::new(tokio::sync::Mutex::new(db)))
+}
+
+pub fn with_db(db: AppDb) -> impl Filter<Extract = (AppDb,), Error = Infallible> + Clone {
     warp::any().map(move || db.clone())
 }
 
@@ -30,3 +38,10 @@ impl ErrorMessage {
 }
 
 impl warp::reject::Reject for ErrorMessage {}
+
+pub fn error<M>(message: M) -> ErrorMessage
+where
+    M: std::fmt::Display,
+{
+    ErrorMessage::new(message)
+}

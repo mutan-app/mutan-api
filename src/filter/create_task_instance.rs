@@ -1,44 +1,44 @@
-use crate::filters::util;
-use serde::Deserialize;
+use crate::util;
 use warp::Filter;
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct Extract {
     pub token: String,
     pub task_id: i64,
 }
 
-pub async fn handler(extract: Extract, db: util::Db) -> Result<(), warp::Rejection> {
+pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
-        .map_err(|_| util::ErrorMessage::new("failed to get a user"))?;
+        .map_err(util::error)?;
 
     let task = sqlx::query!("SELECT user_id FROM tasks WHERE id = $1", extract.task_id)
         .fetch_one(&*db)
         .await
-        .map_err(|_| util::ErrorMessage::new("failed to get a task"))?;
+        .map_err(util::error)?;
 
+    // prevent to access other user's task
     if task.user_id != user.id {
-        return Err(util::ErrorMessage::new("failed to get a task").into());
+        return Err(util::error("no permission to access the task").into());
     }
 
     let task_instance = sqlx::query!(
-        "SELECT COUNT(id) FROM task_instances
-            WHERE task_id IN (SELECT id FROM tasks WHERE user_id = $1)",
+        "SELECT COUNT(id) FROM task_instances WHERE task_id IN (SELECT id FROM tasks WHERE user_id = $1)",
         user.id,
     )
     .fetch_one(&*db)
     .await
-    .map_err(|_| util::ErrorMessage::new("failed to get tasks"))?;
+    .map_err(util::error)?;
 
+    // prevent to create a task instance more than 1
     let count = task_instance
         .count
-        .ok_or_else(|| util::ErrorMessage::new("failed to count tasks"))?;
+        .ok_or_else(|| util::error("failed to count tasks"))?;
     if 0 < count {
-        return Err(util::ErrorMessage::new("failed to create a task instance").into());
+        return Err(util::error("task instance already exists").into());
     }
 
     sqlx::query!(
@@ -47,13 +47,13 @@ pub async fn handler(extract: Extract, db: util::Db) -> Result<(), warp::Rejecti
     )
     .execute(&*db)
     .await
-    .map_err(|_| util::ErrorMessage::new("failed to create a task instance"))?;
+    .map_err(util::error)?;
 
     Ok(())
 }
 
 pub fn filter(
-    db: util::Db,
+    db: util::AppDb,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path!("create_task_instance")
         .and(warp::post())

@@ -8,20 +8,20 @@ mod get_meta;
 mod get_task;
 mod get_task_instance;
 mod get_tasks;
+mod get_time_series;
 mod get_training;
-mod get_training_results;
 mod get_trainings;
 mod get_user;
 mod proceed_task_instance;
-mod util;
 
 #[cfg(test)]
 mod test;
 
+use crate::util;
 use warp::Filter;
 
 pub fn filter(
-    db: util::Db,
+    db: util::AppDb,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     get_meta::filter()
         .or(get_user::filter(db.clone()))
@@ -36,5 +36,5 @@ pub fn filter(
         .or(delete_task_instance::filter(db.clone()))
         .or(get_trainings::filter(db.clone()))
         .or(get_training::filter(db.clone()))
-        .or(get_training_results::filter(db))
+        .or(get_time_series::filter(db))
 }

@@ -3,11 +3,11 @@ name = "ベンチ"
 description = "https://www.google.com/search?q=%E3%83%99%E3%83%B3%E3%83%81%E3%83%97%E3%83%AC%E3%82%B9"
 weight = 40.0
 times = 10
-tags = [ "腕", "胸" ]
+tags = ["腕", "胸"]
 
 [[trainings]]
 name = "スクワット"
 description = "https://www.google.com/search?q=%E3%82%B9%E3%82%AF%E3%83%AF%E3%83%83%E3%83%88"
 weight = 60.0
 times = 10
-tags = [ "腰", "脚" ]
+tags = ["腰", "脚"]

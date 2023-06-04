@@ -1,25 +1,24 @@
-use crate::filters::util;
-use serde::Deserialize;
+use crate::util;
 use warp::Filter;
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct Extract {
     pub token: String,
 }
 
-pub async fn handler(extract: Extract, db: util::Db) -> Result<(), warp::Rejection> {
+pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
     sqlx::query!("DELETE FROM users WHERE token = $1", extract.token)
         .execute(&*db)
         .await
-        .map_err(|_| util::ErrorMessage::new("failed to delete a user"))?;
+        .map_err(util::error)?;
 
     Ok(())
 }
 
 pub fn filter(
-    db: util::Db,
+    db: util::AppDb,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path!("delete_user")
         .and(warp::post())

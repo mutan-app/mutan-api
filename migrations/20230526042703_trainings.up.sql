@@ -5,5 +5,5 @@ CREATE TABLE trainings (
   description VARCHAR(256),
   weight FLOAT NOT NULL,
   times INTEGER NOT NULL,
-  tags VARCHAR(32) ARRAY NOT NULL
+	tags VARCHAR(32) ARRAY NOT NULL
 );

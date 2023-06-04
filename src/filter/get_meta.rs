@@ -1,8 +1,7 @@
-use serde::Serialize;
 use std::convert::Infallible;
 use warp::Filter;
 
-#[derive(Debug, Default, Clone, Serialize)]
+#[derive(Debug, Default, Clone, serde::Serialize)]
 pub struct Reply {
     pub name: String,
     pub version: String,
