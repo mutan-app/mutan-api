@@ -1,5 +1,4 @@
 use crate::util;
-use std::borrow::Cow;
 use warp::Filter;
 
 #[derive(Debug, Default, Clone, serde::Deserialize)]
@@ -13,8 +12,20 @@ pub struct Extract {
     pub tag: Option<String>,
 }
 
-#[derive(Debug, Default, Clone, serde::Serialize, sqlx::FromRow)]
+#[derive(Debug, Default, Clone, serde::Serialize)]
 pub struct Reply {
+    pub id: i64,
+    pub name: String,
+    pub description: Option<String>,
+    pub weight: f64,
+    pub times: i32,
+    pub tags: Vec<String>,
+    pub done_times: i64,
+    pub latest_done_at: Option<chrono::NaiveDateTime>,
+}
+
+#[derive(Debug, Default, Clone, sqlx::FromRow)]
+pub struct Training {
     pub id: i64,
     pub name: String,
     pub description: Option<String>,
@@ -42,28 +53,34 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, wa
 
     let sort_dir = if extract.descending { "DESC" } else { "ASC" };
 
-    let search_cond = match extract.search {
-        Some(search) => Cow::Owned(format!("name LIKE '%{}%'", search)),
-        None => Cow::Borrowed("TRUE"),
-    };
-
-    let tag_cond = match extract.tag {
-        Some(tag) => Cow::Owned(format!("'{}' = ANY(tags)", tag)),
-        None => Cow::Borrowed("TRUE"),
-    };
-
     let query = format!(
-        "SELECT t1.id, t1.name, t1.description, t1.weight, t1.times, t1.tags, COUNT(t2.id) AS done_times, MAX(t2.done_at) AS latest_done_at FROM trainings AS t1 LEFT JOIN training_results AS t2 ON t1.id = t2.training_id AND t2.user_id = $1 WHERE {} AND {} GROUP BY t1.id ORDER BY {} {} OFFSET $2 LIMIT $3",
-        search_cond, tag_cond, sort_expr, sort_dir,
+        "SELECT t1.id, t1.name, t1.description, t1.weight, t1.times, t1.tags, COUNT(t2.id) AS done_times, MAX(t2.done_at) AS latest_done_at FROM trainings AS t1 LEFT JOIN training_results AS t2 ON t1.id = t2.training_id AND t2.user_id = $1 WHERE ($4 IS NULL OR t1.name LIKE $4) AND ($5 IS NULL OR $5 = ANY(t1.tags)) GROUP BY t1.id ORDER BY {} {} OFFSET $2 LIMIT $3",
+        sort_expr, sort_dir,
     );
 
-    let reply = sqlx::query_as::<_, Reply>(query.as_str())
+    let trainings = sqlx::query_as::<_, Training>(query.as_str())
         .bind(user.id)
         .bind(extract.offset)
         .bind(extract.limit)
+        .bind(extract.search)
+        .bind(extract.tag)
         .fetch_all(&*db)
         .await
         .map_err(util::error)?;
+
+    let reply = trainings
+        .into_iter()
+        .map(|training| Reply {
+            id: training.id,
+            name: training.name,
+            description: training.description,
+            weight: training.weight,
+            times: training.times,
+            tags: training.tags,
+            done_times: training.done_times.unwrap_or(0),
+            latest_done_at: training.latest_done_at,
+        })
+        .collect::<Vec<_>>();
 
     Ok(reply)
 }

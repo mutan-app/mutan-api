@@ -15,7 +15,7 @@ pub struct Reply {
     pub id: i64,
     pub name: String,
     pub description: Option<String>,
-    pub done_times: Option<i64>,
+    pub done_times: i64,
     pub latest_done_at: Option<chrono::NaiveDateTime>,
     pub training_instances: Vec<TrainingInstance>,
 }
@@ -28,9 +28,10 @@ pub struct TrainingInstance {
     pub times: i32,
     pub name: String,
     pub description: Option<String>,
+    pub tags: Vec<String>,
 }
 
-#[derive(sqlx::FromRow)]
+#[derive(Debug, Clone, Default, sqlx::FromRow)]
 pub struct Task {
     pub id: i64,
     pub name: String,
@@ -69,11 +70,12 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, wa
         .await
         .map_err(util::error)?;
 
+    // not support async map
     let mut reply_all = vec![];
     for task in tasks {
         let training_instances = sqlx::query_as!(
             TrainingInstance,
-            "SELECT t1.id, t1.training_id, t1.weight, t1.times, t2.name, t2.description FROM training_instances AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.task_id = $1",
+            "SELECT t1.id, t1.training_id, t1.weight, t1.times, t2.name, t2.description, t2.tags FROM training_instances AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.task_id = $1",
             task.id,
         )
         .fetch_all(&*db)
@@ -84,7 +86,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, wa
             id: task.id,
             name: task.name,
             description: task.description,
-            done_times: task.done_times,
+            done_times: task.done_times.unwrap_or(0),
             latest_done_at: task.latest_done_at,
             training_instances,
         };

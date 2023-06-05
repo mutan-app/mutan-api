@@ -41,6 +41,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
     .await
     .map_err(util::error)?;
 
+    // not support async map
     for (stage, training_instance) in extract.training_instances.into_iter().enumerate() {
         sqlx::query!(
             "INSERT INTO training_instances (task_id, stage, training_id, weight, times) VALUES ($1, $2, $3, $4, $5)",

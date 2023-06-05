@@ -12,6 +12,8 @@ pub struct Reply {
     pub id: i64,
     pub name: String,
     pub description: Option<String>,
+    pub done_times: i64,
+    pub latest_done_at: Option<chrono::NaiveDateTime>,
     pub training_instances: Vec<TrainingInstance>,
 }
 
@@ -23,6 +25,7 @@ pub struct TrainingInstance {
     pub times: i32,
     pub name: String,
     pub description: Option<String>,
+    pub tags: Vec<String>,
 }
 
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::Rejection> {
@@ -33,22 +36,27 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
         .await
         .map_err(util::error)?;
 
-    let task = sqlx::query!(
-        "SELECT id, name, description, user_id FROM tasks WHERE id = $1",
-        extract.id,
-    )
-    .fetch_one(&*db)
-    .await
-    .map_err(util::error)?;
+    let task = sqlx::query!("SELECT user_id FROM tasks WHERE id = $1", extract.id)
+        .fetch_one(&*db)
+        .await
+        .map_err(util::error)?;
 
     // prevent to access other user's task
     if task.user_id != user.id {
         return Err(util::error("no permission to access the task").into());
     }
 
+    let task = sqlx::query!(
+        "SELECT t1.id, t1.name, t1.description, COUNT(t2.id) AS done_times, MAX(t2.done_at) AS latest_done_at FROM tasks AS t1 LEFT JOIN task_results AS t2 ON t1.id = t2.task_id WHERE t1.id = $1 GROUP BY t1.id",
+        extract.id,
+    )
+    .fetch_one(&*db)
+    .await
+    .map_err(util::error)?;
+
     let training_instances = sqlx::query_as!(
         TrainingInstance,
-        "SELECT t1.id, t1.training_id, t1.weight, t1.times, t2.name, t2.description FROM training_instances AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.task_id = $1",
+        "SELECT t1.id, t1.training_id, t1.weight, t1.times, t2.name, t2.description, t2.tags FROM training_instances AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.task_id = $1",
         task.id
     )
     .fetch_all(&*db)
@@ -59,6 +67,8 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
         id: task.id,
         name: task.name,
         description: task.description,
+        done_times: task.done_times.unwrap_or(0),
+        latest_done_at: task.latest_done_at,
         training_instances,
     };
 

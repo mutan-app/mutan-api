@@ -10,10 +10,10 @@ pub struct Extract {
 pub struct Reply {
     pub id: i64,
     pub task_id: i64,
+    pub progress: i32,
     pub name: String,
     pub description: Option<String>,
     pub training_instances: Vec<TrainingInstance>,
-    pub progress: i32,
 }
 
 #[derive(Debug, Default, Clone, serde::Serialize)]
@@ -24,6 +24,7 @@ pub struct TrainingInstance {
     pub times: i32,
     pub name: String,
     pub description: Option<String>,
+    pub tags: Vec<String>,
 }
 
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::Rejection> {
@@ -49,7 +50,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
 
     let training_instances = sqlx::query_as!(
         TrainingInstance,
-        "SELECT t1.id, t1.training_id, t1.weight, t1.times, t2.name, t2.description FROM training_instances AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.task_id = $1",
+        "SELECT t1.id, t1.training_id, t1.weight, t1.times, t2.name, t2.description, t2.tags FROM training_instances AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.task_id = $1",
         task_instance.task_id
     )
     .fetch_all(&*db)

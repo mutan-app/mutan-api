@@ -15,7 +15,7 @@ pub struct Reply {
     pub weight: f64,
     pub times: i32,
     pub tags: Vec<String>,
-    pub done_times: Option<i64>,
+    pub done_times: i64,
     pub latest_done_at: Option<chrono::NaiveDateTime>,
 }
 
@@ -27,8 +27,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
         .await
         .map_err(util::error)?;
 
-    let reply = sqlx::query_as!(
-        Reply,
+    let training = sqlx::query!(
         "SELECT t1.id, t1.name, t1.description, t1.weight, t1.times, t1.tags, COUNT(t2.id) AS done_times, MAX(t2.done_at) AS latest_done_at FROM trainings AS t1 LEFT JOIN training_results AS t2 ON t1.id = t2.training_id AND t2.user_id = $1 WHERE t1.id = $2 GROUP BY t1.id",
         user.id,
         extract.id,
@@ -36,6 +35,17 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
     .fetch_one(&*db)
     .await
     .map_err(util::error)?;
+
+    let reply = Reply {
+        id: training.id,
+        name: training.name,
+        description: training.description,
+        weight: training.weight,
+        times: training.times,
+        tags: training.tags,
+        done_times: training.done_times.unwrap_or(0),
+        latest_done_at: training.latest_done_at,
+    };
 
     Ok(reply)
 }
