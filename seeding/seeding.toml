@@ -1,13 +1,449 @@
 [[trainings]]
-name = "ベンチ"
-description = "https://www.google.com/search?q=%E3%83%99%E3%83%B3%E3%83%81%E3%83%97%E3%83%AC%E3%82%B9"
-weight = 40.0
+name = "ベンチプレス"
+description = "胸を鍛える"
+weight = 60.0
 times = 10
-tags = ["腕", "胸"]
+tags = ["胸", "腕"]
+
+[[trainings]]
+name = "インクラインベンチプレス"
+description = "胸の上部を鍛える"
+weight = 50.0
+times = 8
+tags = ["胸", "腕"]
+
+[[trainings]]
+name = "デクラインベンチプレス"
+description = "胸の下部を鍛える"
+weight = 55.0
+times = 12
+tags = ["胸", "腕"]
+
+[[trainings]]
+name = "ベントアームプルオーバー"
+description = "胸と背中を鍛える"
+weight = 20.0
+times = 15
+tags = ["胸", "背中"]
+
+[[trainings]]
+name = "ダンベルフライ"
+description = "胸の中部を鍛える"
+weight = 15.0
+times = 12
+tags = ["胸"]
+
+[[trainings]]
+name = "インクラインダンベルフライ"
+description = "胸の上部を鍛える"
+weight = 20.0
+times = 10
+tags = ["胸"]
+
+[[trainings]]
+name = "ダンベルプレス"
+description = "胸を鍛える"
+weight = 65.0
+times = 8
+tags = ["胸", "腕"]
+
+[[trainings]]
+name = "ダンベルプルオーバー"
+description = "胸と背中を鍛える"
+weight = 25.0
+times = 12
+tags = ["胸", "背中"]
+
+[[trainings]]
+name = "ペックフライマシン"
+description = "胸を鍛える"
+weight = 80.0
+times = 10
+tags = ["胸"]
+
+[[trainings]]
+name = "ケーブルクロスオーバー"
+description = "胸の中部を鍛える"
+weight = 30.0
+times = 15
+tags = ["胸"]
+
+# ディップス
+# 胸と上腕三頭筋を鍛える
+# 体重
+# 12
+# 胸, 腕
+
+# プッシュアップ
+# 胸を鍛える
+# 体重
+# 15
+# 胸
+
+[[trainings]]
+name = "ダンベルプレス"
+description = "胸を鍛える"
+weight = 55.0
+times = 10
+tags = ["胸", "腕"]
+
+[[trainings]]
+name = "インクラインダンベルプレス"
+description = "胸の上部を鍛える"
+weight = 50.0
+times = 8
+tags = ["胸"]
+
+[[trainings]]
+name = "マシンチェスト"
+description = "胸を鍛える"
+weight = 70.0
+times = 12
+tags = ["胸"]
 
 [[trainings]]
 name = "スクワット"
-description = "https://www.google.com/search?q=%E3%82%B9%E3%82%AF%E3%83%AF%E3%83%83%E3%83%88"
+description = "太もも全体を鍛える"
+weight = 80.0
+times = 8
+tags = ["脚"]
+
+# ランジ
+# 太もも前面を鍛える
+# 体重
+# 12
+# 脚
+
+[[trainings]]
+name = "フロントスクワット"
+description = "太もも前面を鍛える"
 weight = 60.0
 times = 10
-tags = ["腰", "脚"]
+tags = ["脚"]
+
+[[trainings]]
+name = "ハックリフト"
+description = "ハムストリングスとお尻を鍛える"
+weight = 50.0
+times = 12
+tags = ["脚", "お尻"]
+
+[[trainings]]
+name = "レッグプレス"
+description = "太もも全体を鍛える"
+weight = 100.0
+times = 10
+tags = ["脚"]
+
+[[trainings]]
+name = "レッグエクステンション"
+description = "太もも前面を鍛える"
+weight = 40.0
+times = 15
+tags = ["脚"]
+
+[[trainings]]
+name = "レッグカール"
+description = "ハムストリングスを鍛える"
+weight = 40.0
+times = 12
+tags = ["脚"]
+
+# ブルガリアンスクワット
+# 太もも全体を鍛える
+# 体重
+# 10
+# 脚
+
+[[trainings]]
+name = "シシースクワット"
+description = "太もも全体を鍛える"
+weight = 60.0
+times = 8
+tags = ["脚"]
+
+# カーフレイズ
+# ふくらはぎを鍛える
+# 体重
+# 15
+# ふくらはぎ
+
+[[trainings]]
+name = "インナーサイ"
+description = "太もも内側を鍛える"
+weight = 30.0
+times = 12
+tags = ["脚"]
+
+[[trainings]]
+name = "アウターサイ"
+description = "太もも外側を鍛える"
+weight = 30.0
+times = 12
+tags = ["脚"]
+
+[[trainings]]
+name = "スティッフレッグドデッドリフト"
+description = "ハムストリングスとお尻を鍛える"
+weight = 70.0
+times = 8
+tags = ["脚", "お尻"]
+
+[[trainings]]
+name = "ハックスクワット"
+description = "太もも全体を鍛える"
+weight = 60.0
+times = 10
+tags = ["脚"]
+
+# ヒップスラスト
+# お尻を鍛える
+# 体重
+# 12
+# おしり
+
+[[trainings]]
+name = "ダンベルカール"
+description = "上腕二頭筋を鍛える"
+weight = 10.0
+times = 12
+tags = ["腕"]
+
+[[trainings]]
+name = "バーベルカール"
+description = "上腕二頭筋を鍛える"
+weight = 20.0
+times = 10
+tags = ["腕"]
+
+[[trainings]]
+name = "ハンマーカール"
+description = "上腕二頭筋と前腕を鍛える"
+weight = 15.0
+times = 12
+tags = ["二頭", "腕"]
+
+[[trainings]]
+name = "インクラインカール"
+description = "上腕二頭筋を鍛える"
+weight = 12.0
+times = 10
+tags = ["二頭"]
+
+[[trainings]]
+name = "プリチャーカール"
+description = "上腕二頭筋を鍛える"
+weight = 15.0
+times = 12
+tags = ["二頭"]
+
+[[trainings]]
+name = "コンセントレーションカール"
+description = "上腕二頭筋を鍛える"
+weight = 8.0
+times = 10
+tags = ["二頭"]
+
+[[trainings]]
+name = "ライイングダウンカール"
+description = "上腕二頭筋を鍛える"
+weight = 10.0
+times = 12
+tags = ["二頭"]
+
+[[trainings]]
+name = "ケーブルカール"
+description = "上腕二頭筋を鍛える"
+weight = 20.0
+times = 15
+tags = ["二頭"]
+
+[[trainings]]
+name = "トライセプスエクステンション"
+description = "上腕三頭筋を鍛える"
+weight = 20.0
+times = 12
+tags = ["三頭"]
+
+[[trainings]]
+name = "プレスダウン"
+description = "上腕三頭筋を鍛える"
+weight = 30.0
+times = 15
+tags = ["三頭"]
+
+[[trainings]]
+name = "フレンチプレス"
+description = "上腕三頭筋を鍛える"
+weight = 25.0
+times = 12
+tags = ["三頭"]
+
+[[trainings]]
+name = "ナローグリップベンチプレス"
+description = "上腕三頭筋を鍛える"
+weight = 40.0
+times = 8
+tags = ["三頭"]
+
+[[trainings]]
+name = "トライセプスキックバック"
+description = "上腕三頭筋を鍛える"
+weight = 12.0
+times = 12
+tags = ["三頭"]
+
+[[trainings]]
+name = "ケーブルトライセプスキックバック"
+description = "上腕三頭筋を鍛える"
+weight = 15.0
+times = 10
+tags = ["三頭"]
+
+[[trainings]]
+name = "ハンマーカール"
+description = "上腕二頭筋と前腕を鍛える"
+weight = 15.0
+times = 12
+tags = ["腕"]
+
+[[trainings]]
+name = "リストカール"
+description = "前腕を鍛える"
+weight = 10.0
+times = 15
+tags = ["腕"]
+
+[[trainings]]
+name = "サイドレイズ"
+description = "肩の中部を鍛える"
+weight = 10.0
+times = 12
+tags = ["肩"]
+
+[[trainings]]
+name = "フロントレイズ"
+description = "前部上腕三頭筋を鍛える"
+weight = 12.0
+times = 10
+tags = ["肩"]
+
+[[trainings]]
+name = "ダンベルショルダープレス"
+description = "肩全体を鍛える"
+weight = 20.0
+times = 8
+tags = ["肩"]
+
+[[trainings]]
+name = "バーベルショルダープレス(フロント)"
+description = "前部上腕三頭筋を鍛える"
+weight = 25.0
+times = 10
+tags = ["肩"]
+
+[[trainings]]
+name = "バーベルショルダープレス(バック)"
+description = "後部上腕三頭筋を鍛える"
+weight = 30.0
+times = 12
+tags = ["肩"]
+
+[[trainings]]
+name = "リアレイズ"
+description = "肩の後部を鍛える"
+weight = 15.0
+times = 12
+tags = ["肩"]
+
+[[trainings]]
+name = "ミリタリープレス"
+description = "肩全体を鍛える"
+weight = 30.0
+times = 10
+tags = ["肩"]
+
+[[trainings]]
+name = "スタンディングロー"
+description = "後部上腕三頭筋を鍛える"
+weight = 40.0
+times = 8
+tags = ["肩"]
+
+[[trainings]]
+name = "バーベルシュラッグ"
+description = "上部僧帽筋を鍛える"
+weight = 50.0
+times = 12
+tags = ["肩"]
+
+[[trainings]]
+name = "アップライトロー"
+description = "上部僧帽筋を鍛える"
+weight = 20.0
+times = 15
+tags = ["肩"]
+
+[[trainings]]
+name = "アーノルドプレス"
+description = "肩全体を鍛える"
+weight = 15.0
+times = 10
+tags = ["肩"]
+
+[[trainings]]
+name = "フェイスプル"
+description = "肩の後部を鍛える"
+weight = 12.0
+times = 12
+tags = ["肩"]
+
+[[trainings]]
+name = "マシンラテラルレイズ"
+description = "肩の中部を鍛える"
+weight = 25.0
+times = 12
+tags = ["肩"]
+
+[[trainings]]
+name = "インクラインサイドレイズ"
+description = "肩の中部を鍛える"
+weight = 10.0
+times = 12
+tags = ["肩"]
+
+# クランチ
+# 腹直筋を鍛える
+# 体重
+# 15
+# お腹
+
+# 腹筋ローラー
+# 腹直筋を鍛える
+# 体重
+# 10
+# お腹
+
+# シットアップ
+# 腹直筋を鍛える
+# 体重
+# 12
+# お腹
+
+# ヒップレイズ
+# 下腹部を鍛える
+# 体重
+# 12
+# お腹
+
+# レッグレイズ
+# 下腹部を鍛える
+# 体重
+# 12
+# お腹
+
+# ケーブルクランチ
+# 腹直筋を鍛える
+# 体重
+# 15
+# お腹
