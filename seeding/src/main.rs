@@ -32,12 +32,13 @@ async fn main() {
     for (i, training) in root.trainings.iter().enumerate() {
         if i < training_count {
             sqlx::query!(
-                "UPDATE trainings SET name = $1, description = $2, weight = $3, times = $4, tags = $5",
+                "UPDATE trainings SET name = $1, description = $2, weight = $3, times = $4, tags = $5 WHERE id = $6",
                 training.name,
                 training.description,
                 training.weight,
                 training.times,
                 &training.tags,
+                i as i64,
             )
             .execute(&db)
             .await
