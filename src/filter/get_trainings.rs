@@ -39,6 +39,7 @@ pub struct Training {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
@@ -53,11 +54,13 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, wa
 
     let sort_dir = if extract.descending { "DESC" } else { "ASC" };
 
+    // ソート規則を動的に変更できるようクエリを構築
     let query = format!(
         "SELECT t1.id, t1.name, t1.description, t1.weight, t1.times, t1.tags, COUNT(t2.id) AS done_times, MAX(t2.done_at) AS latest_done_at FROM trainings AS t1 LEFT JOIN training_results AS t2 ON t1.id = t2.training_id AND t2.user_id = $1 WHERE ($4 IS NULL OR t1.name LIKE $4) AND ($5 IS NULL OR $5 = ANY(t1.tags)) GROUP BY t1.id ORDER BY {} {} OFFSET $2 LIMIT $3",
         sort_expr, sort_dir,
     );
 
+    // 名前検索またはタグ検索で該当するトレーニング情報を取得
     let trainings = sqlx::query_as::<_, Training>(query.as_str())
         .bind(user.id)
         .bind(extract.offset)

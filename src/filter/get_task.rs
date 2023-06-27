@@ -31,21 +31,24 @@ pub struct TrainingInstance {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(util::error)?;
 
+    // タスクを取得(保持するユーザidの情報のみ)
     let task = sqlx::query!("SELECT user_id FROM tasks WHERE id = $1", extract.id)
         .fetch_one(&*db)
         .await
         .map_err(util::error)?;
 
-    // prevent to access other user's task
+    // 他ユーザのタスクを取得した場合
     if task.user_id != user.id {
         return Err(util::error("no permission to access the task").into());
     }
 
+    // タスクを取得(タスクの完了数と直近の完了日時を含む)
     let task = sqlx::query!(
         "SELECT t1.id, t1.name, t1.description, COUNT(t2.id) AS done_times, MAX(t2.done_at) AS latest_done_at FROM tasks AS t1 LEFT JOIN task_results AS t2 ON t1.id = t2.task_id WHERE t1.id = $1 GROUP BY t1.id",
         extract.id,
@@ -54,6 +57,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
     .await
     .map_err(util::error)?;
 
+    // タスクに関連するトレーニング情報を取得
     let training_instances = sqlx::query_as!(
         TrainingInstance,
         "SELECT t1.id, t1.training_id, t1.weight, t1.times, t2.name, t2.description, t2.tags FROM training_instances AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.task_id = $1",

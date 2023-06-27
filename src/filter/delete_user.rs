@@ -9,6 +9,7 @@ pub struct Extract {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを削除
     sqlx::query!("DELETE FROM users WHERE token = $1", extract.token)
         .execute(&*db)
         .await

@@ -25,6 +25,7 @@ pub struct Reply {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
@@ -32,11 +33,13 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, wa
 
     let sort_dir = if extract.descending { "DESC" } else { "ASC" };
 
+    // ソート順を動的に変更できるクエリを構築
     let query = format!(
         "SELECT date_trunc('day', t1.done_at) AS at, COUNT(t1.id) AS times FROM training_results AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.user_id = $1 AND $2 <= t1.done_at AND t1.done_at < $3 AND ($4 IS NULL OR $4 = ANY(t2.tags)) GROUP BY at ORDER BY at {}",
         sort_dir,
     );
 
+    // 1日ごとのタグ別トレーニング完了数を取得(特定時期で切り取り)
     let time_series = sqlx::query_as::<_, TimeSeries>(query.as_str())
         .bind(user.id)
         .bind(extract.from)
@@ -46,6 +49,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, wa
         .await
         .map_err(util::error)?;
 
+    // DB操作が正常に行われているか確認
     let reply = time_series
         .into_iter()
         .map(|time_series| {

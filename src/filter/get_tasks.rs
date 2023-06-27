@@ -43,6 +43,7 @@ pub struct Task {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
@@ -57,11 +58,13 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, wa
 
     let sort_dir = if extract.descending { "DESC" } else { "ASC" };
 
+    // ソート規則を動的に変更できるクエリを構築
     let query = format!(
         "SELECT t1.id, t1.name, t1.description, COUNT(t2.id) AS done_times, MAX(t2.done_at) AS latest_done_at FROM tasks AS t1 LEFT JOIN task_results AS t2 ON t1.id = t2.task_id WHERE user_id = $1 GROUP BY t1.id ORDER BY {} {} OFFSET $2 LIMIT $3",
         sort_expr, sort_dir,
     );
 
+    // タスク情報を取得
     let tasks = sqlx::query_as::<_, Task>(query.as_str())
         .bind(user.id)
         .bind(extract.offset)
@@ -70,9 +73,9 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, wa
         .await
         .map_err(util::error)?;
 
-    // not support async map
     let mut reply_all = vec![];
     for task in tasks {
+        // タスクに関連するトレーニング情報を取得
         let training_instances = sqlx::query_as!(
             TrainingInstance,
             "SELECT t1.id, t1.training_id, t1.weight, t1.times, t2.name, t2.description, t2.tags FROM training_instances AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.task_id = $1",

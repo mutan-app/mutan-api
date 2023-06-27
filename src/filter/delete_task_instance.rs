@@ -9,11 +9,13 @@ pub struct Extract {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(util::error)?;
 
+    // タスクインスタンスを取得
     let task_instance = sqlx::query!(
         "SELECT id, task_id, progress FROM task_instances WHERE task_id IN (SELECT id FROM tasks WHERE user_id = $1)",
         user.id
@@ -26,6 +28,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Reje
 
     let date_time = chrono::Utc::now().naive_utc();
 
+    // 完了したトレーニングだけをトレーニング結果として追加
     sqlx::query!(
         "INSERT INTO training_results (user_id, training_id, weight, times, done_at) SELECT $1, training_id, weight, times, $2 FROM training_instances WHERE task_id = $3 AND stage < $4",
         user.id,
@@ -37,6 +40,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Reje
     .await
     .map_err(util::error)?;
 
+    // タスク結果を追加
     sqlx::query!(
         "INSERT INTO task_results (task_id, done_at) VALUES ($1, $2)",
         task_instance.task_id,
@@ -46,6 +50,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Reje
     .await
     .map_err(util::error)?;
 
+    // タスクインスタンスを削除
     sqlx::query!("DELETE FROM task_instances WHERE id = $1", task_instance.id)
         .execute(&mut tx)
         .await

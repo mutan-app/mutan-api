@@ -22,11 +22,13 @@ pub struct Reply {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(util::error)?;
 
+    // トレーニング情報を取得
     let training = sqlx::query!(
         "SELECT t1.id, t1.name, t1.description, t1.weight, t1.times, t1.tags, COUNT(t2.id) AS done_times, MAX(t2.done_at) AS latest_done_at FROM trainings AS t1 LEFT JOIN training_results AS t2 ON t1.id = t2.training_id AND t2.user_id = $1 WHERE t1.id = $2 GROUP BY t1.id",
         user.id,

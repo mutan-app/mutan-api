@@ -24,6 +24,7 @@ pub struct Reply {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let user = sqlx::query!("SELECT (id) FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
@@ -31,6 +32,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
 
     let mut tx = db.begin().await.map_err(util::error)?;
 
+    // 新規タスクを作成
     let task = sqlx::query!(
         "INSERT INTO tasks (user_id, name, description) VALUES ($1, $2, $3) RETURNING id",
         user.id,
@@ -41,8 +43,8 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
     .await
     .map_err(util::error)?;
 
-    // not support async map
     for (stage, training_instance) in extract.training_instances.into_iter().enumerate() {
+        // 新規タスクに関連するトレーニングを追加
         sqlx::query!(
             "INSERT INTO training_instances (task_id, stage, training_id, weight, times) VALUES ($1, $2, $3, $4, $5)",
             task.id,

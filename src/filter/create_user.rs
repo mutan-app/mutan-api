@@ -9,12 +9,14 @@ pub struct Reply {
 }
 
 pub async fn handler(db: util::AppDb) -> Result<Reply, warp::Rejection> {
+    // ランダムなトークンを生成
     let mut bytes = [0u8; 64];
     rand::thread_rng().fill(&mut bytes);
     let token = base64::engine::general_purpose::STANDARD.encode(bytes);
 
     let db = db.lock().await;
 
+    // 新規ユーザを作成
     sqlx::query!("INSERT INTO users (token) VALUES ($1)", token)
         .execute(&*db)
         .await

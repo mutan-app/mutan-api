@@ -10,6 +10,7 @@ pub struct Extract {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンがさすユーザを取得
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
@@ -20,11 +21,12 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Reje
         .await
         .map_err(util::error)?;
 
-    // prevent to access other user's task
+    // 他ユーザのタスクを取得した場合
     if task.user_id != user.id {
         return Err(util::error("no permission to access the task").into());
     }
 
+    // タスクインスタンスが存在する場合は取得
     let task_instance = sqlx::query!(
         "SELECT COUNT(id) FROM task_instances WHERE task_id IN (SELECT id FROM tasks WHERE user_id = $1)",
         user.id,
@@ -33,7 +35,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Reje
     .await
     .map_err(util::error)?;
 
-    // prevent to create a task instance more than 1
+    // タスクインスタンスが1つ以上存在しないように
     let count = task_instance
         .count
         .ok_or_else(|| util::error("failed to count tasks"))?;
@@ -41,6 +43,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Reje
         return Err(util::error("task instance already exists").into());
     }
 
+    // タスクインスタンスを作成
     sqlx::query!(
         "INSERT INTO task_instances (task_id, progress) VALUES ($1, 0)",
         extract.task_id,

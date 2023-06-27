@@ -14,6 +14,7 @@ pub struct Reply {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let reply = sqlx::query_as!(
         Reply,
         "SELECT token FROM users WHERE token = $1",

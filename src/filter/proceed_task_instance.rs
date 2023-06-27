@@ -10,11 +10,13 @@ pub struct Extract {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<(), warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(util::error)?;
 
+    // ユーザの持つタスクインスタンスの進行値を更新
     sqlx::query!(
         "UPDATE task_instances SET progress = $1 WHERE task_id IN (SELECT id FROM tasks WHERE user_id = $2)",
         extract.progress,

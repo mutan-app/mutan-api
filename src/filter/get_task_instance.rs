@@ -30,11 +30,13 @@ pub struct TrainingInstance {
 pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::Rejection> {
     let db = db.lock().await;
 
+    // トークンが指すユーザを取得
     let user = sqlx::query!("SELECT id FROM users WHERE token = $1", extract.token)
         .fetch_one(&*db)
         .await
         .map_err(util::error)?;
 
+    // タスクインスタンスを取得
     let task_instance = sqlx::query!(
         "SELECT t1.id, t1.task_id, t1.progress, t2.user_id, t2.name, t2.description FROM task_instances AS t1 LEFT JOIN tasks AS t2 ON t1.task_id = t2.id WHERE t1.task_id IN (SELECT id FROM tasks WHERE user_id = $1)",
         user.id,
@@ -43,11 +45,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Reply, warp::R
     .await
     .map_err(util::error)?;
 
-    // prevent to access other user's task
-    if task_instance.user_id != user.id {
-        return Err(util::error("no permission to access the task").into());
-    }
-
+    // タスクインスタンスに関連するトレーニング情報を取得
     let training_instances = sqlx::query_as!(
         TrainingInstance,
         "SELECT t1.id, t1.training_id, t1.weight, t1.times, t2.name, t2.description, t2.tags FROM training_instances AS t1 LEFT JOIN trainings AS t2 ON t1.training_id = t2.id WHERE t1.task_id = $1",

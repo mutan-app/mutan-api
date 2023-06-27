@@ -12,5 +12,7 @@ async fn main() {
 
     let db = util::new_app_db().await.unwrap();
 
+    println!("listening on {}", addr);
+
     warp::serve(filter::filter(db)).run(addr).await;
 }
