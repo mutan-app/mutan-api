@@ -71,7 +71,7 @@ pub async fn handler(extract: Extract, db: util::AppDb) -> Result<Vec<Reply>, wa
 pub fn filter(
     db: util::AppDb,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
-    warp::path!("get_training_results")
+    warp::path!("get_time_series")
         .and(warp::post())
         .and(util::json_body())
         .and(util::with_db(db))
